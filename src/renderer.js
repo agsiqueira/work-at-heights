@@ -1,0 +1,1851 @@
+let questionBank = [];
+let finalQuizBank = [];
+let config = {};
+const levels = ['basic', 'intermediate', 'expert'];
+const levelLabels = { basic: 'Basic', intermediate: 'Intermediate', expert: 'Expert' };
+const state = {
+  studentName: '', studentEmail: '', currentTab: 1, selectedInstructorId: 'jake',
+  orientationCompleted: false,
+  smartchatsCompleted: false, expertiseAfterSmartChats: null, smartQuestionCount: 0, smartSummary: '',
+  interviewCompleted: false, interviewScore: 0, expertiseAfterInterview: null,
+  quizCompleted: false, quizScore: null, expertiseAfterQuiz: null,
+  vrCompleted: false, vrExpertiseLevel: null, debriefingCompleted: false, certificateDownloaded: false,
+  interview: { currentModule: 1, currentLevel: 'basic', history: [], usedIds: [], recommendations: [], summary: '' },
+  quiz: { currentModule: 1, currentLevel: 'basic', history: [], usedIds: [], recommendations: [], summary: '', module5ExpertEncountered: false, activeQuestion: null, pendingNext: null },
+  debriefing: { vrReportFileName: '', vrReportText: '', vrSummary: '', history: [], turn: 0, followUpAsked: false, summary: '' }
+};
+
+const safetyInstructors = {
+  jake: {
+    id: 'jake',
+    name: 'Jake Miller',
+    initials: 'JM',
+    title: 'Senior Safety Instructor',
+    shortLabel: 'Jake, Tampa, Florida instructor',
+    origin: 'Tampa, Florida',
+    image: 'assets/instructors/jake-miller.svg',
+    voice: 'cedar',
+    description: 'A senior instructor from Tampa with a fast, confident field-coach style. He is energetic, practical, and direct without sounding formal.',
+    systemStyle: 'Use clear modern English with a fast Tampa, Florida field-coach rhythm. Be energetic, approachable, practical, confident, and direct. Use coaching phrases such as "good catch", "walk me through that", "that is exactly what crews miss", and "that is what we see in the field" when natural. Do not sound like a lecturer. Keep safety reasoning precise and grounded in the provided material.',
+    ttsInstructions: 'Speak as a fast, energetic safety trainer from Tampa, Florida. Use clear modern English, confident field-coach delivery, practical emphasis, and an approachable but decisive rhythm. Do not exaggerate an accent; make the character distinct through pace, confidence, and coaching cadence.'
+  },
+  emily: {
+    id: 'emily',
+    name: 'Emily Carter',
+    initials: 'EC',
+    title: 'Senior Safety Instructor',
+    shortLabel: 'Emily, Denver, Colorado instructor',
+    origin: 'Denver, Colorado',
+    image: 'assets/instructors/emily-carter.svg',
+    voice: 'sage',
+    description: 'A senior instructor from Denver with a warm mentor style. She is calm, articulate, supportive, and focused on helping students explain their reasoning.',
+    systemStyle: 'Use clear western English shaped by a Denver, Colorado mentor style. Be warm, articulate, supportive, calm, and practical. Use coaching phrases such as "you are on the right track", "tell me a little more about your reasoning", "let us think through that together", and "I want to understand how you are assessing the hazard" when natural. Keep the tone friendly while still expert and safety-focused.',
+    ttsInstructions: 'Speak as a professional female safety trainer from Denver, Colorado. Use warm mentor-like pacing, highly articulate speech, supportive coaching intonation, clear pronunciation, and calm confidence. Do not force a heavy accent; make her distinct through clarity, warmth, and patient cadence.'
+  },
+  carlos: {
+    id: 'carlos',
+    name: 'Carlos Rivera',
+    initials: 'CR',
+    title: 'Senior Safety Instructor',
+    shortLabel: 'Carlos, Miami, Florida instructor',
+    origin: 'Miami, Florida',
+    image: 'assets/instructors/carlos-rivera.svg',
+    voice: 'onyx',
+    description: 'A senior instructor from Miami with a formal, demanding supervisor style. He is precise, disciplined, direct, and expects students to justify every safety decision.',
+    systemStyle: 'Use mostly English with a natural Miami bilingual rhythm. Use occasional Spanish words such as "mira", "exacto", "vamos", "compadre", or "tranquilo" when natural, but keep the safety content clear. Be formal, demanding, deliberate, and direct. Hold students accountable without being rude. Ask for precise safety reasoning before accepting an answer. Sound like a strict senior supervisor who expects discipline before anyone leaves the ground.',
+    ttsInstructions: 'Speak as an older male senior safety instructor from Miami, Florida. Use an authoritative, deep, firm, professional voice with deliberate pacing and subtle Miami bilingual rhythm. Include light Spanish flavor only through cadence and occasional phrasing. Do not sound feminine. Do not overdo the accent. Sound demanding but professional.'
+  },
+  beatrice: {
+    id: 'beatrice',
+    name: 'Beatrice Mae Johnson',
+    initials: 'BJ',
+    title: 'Senior Safety Instructor',
+    shortLabel: 'Beatrice, Birmingham, Alabama instructor',
+    origin: 'Birmingham, Alabama',
+    image: 'assets/instructors/beatrice-johnson.svg',
+    voice: 'shimmer',
+    description: 'A highly experienced instructor from Birmingham with a warm Deep South teaching style. She is memorable, practical, caring, and firm about safe decisions.',
+    systemStyle: 'Use clear English with a natural Deep South Alabama flavor. Use regional phrasing such as "well now", "now listen", "honey", "let me tell you", "I have seen folks make that mistake before", and "you do not want to be halfway up there wishing you had checked first" sparingly and naturally. Be warm but firm, practical, and serious about safety. Keep wording understandable. Sound like a respected field trainer with decades of experience.',
+    ttsInstructions: 'Speak as an experienced senior safety instructor from Birmingham, Alabama. Use warm, confident, authentic Southern cadence with practical field authority and a slightly slower storytelling rhythm. Do not exaggerate the accent. Focus on sounding natural, conversational, reassuring, and clear.'
+  }
+};
+
+function getSelectedInstructor() {
+  return safetyInstructors[state.selectedInstructorId] || safetyInstructors.jake;
+}
+
+function selectInstructor(id, options = {}) {
+  if (!safetyInstructors[id]) return;
+  const previousInstructorId = state.selectedInstructorId;
+  state.selectedInstructorId = id;
+  renderInstructorCards();
+  updateInstructorHeader();
+  const instructor = getSelectedInstructor();
+  updateVoiceStatus(`Selected interviewer: ${instructor.name}.`);
+
+  const interviewVisible = $('interviewBox') && !$('interviewBox').classList.contains('hidden');
+  const changed = previousInstructorId !== id;
+  if (changed && interviewVisible) {
+    cancelInterviewerSpeech();
+
+    // When the learner switches instructor mid-interview, do not simply replay
+    // the old text in the new voice. Rebuild the currently active prompt using
+    // the newly selected persona so the displayed text and spoken voice match.
+    const refreshedPrompt = buildCurrentPromptForSelectedInstructor();
+    if (refreshedPrompt) {
+      replaceLastInterviewerMessage(refreshedPrompt);
+      if (voiceState.enabled && !voiceState.muted && options.replayCurrentPrompt !== false) {
+        speakInterviewer(refreshedPrompt);
+      }
+    }
+  }
+}
+
+function buildCurrentPromptForSelectedInstructor() {
+  const q = state.interview && state.interview.activeQuestion;
+  if (!q) return '';
+  const instructor = getSelectedInstructor();
+  const switchNote = `You are now speaking with ${instructor.name}.`;
+  if (!state.interview.history || state.interview.history.length === 0) {
+    return `${personaOpening()}
+
+${makeSegue(null, q)}`;
+  }
+  return `${switchNote}
+
+${makeSegue(null, q)}`;
+}
+
+function replaceLastInterviewerMessage(text) {
+  const messages = Array.from(document.querySelectorAll('#chatLog .msg.interviewer'));
+  if (!messages.length) {
+    addMsg('interviewer', text, { speak: false });
+    return;
+  }
+  const last = messages[messages.length - 1];
+  last.textContent = text;
+  $('chatLog').scrollTop = $('chatLog').scrollHeight;
+}
+
+function renderInstructorCards() {
+  const containers = Array.from(document.querySelectorAll('.instructorChoices'));
+  if (!containers.length) return;
+  containers.forEach(wrap => {
+    wrap.replaceChildren();
+    Object.values(safetyInstructors).forEach(instructor => {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = `instructorCard ${state.selectedInstructorId === instructor.id ? 'selected' : ''}`;
+      button.dataset.instructorId = instructor.id;
+      button.innerHTML = `
+        <img src="${instructor.image}" alt="Portrait of ${instructor.name}" />
+        <span class="instructorCardBody">
+          <strong>${instructor.name}</strong>
+          <em>${instructor.origin}</em>
+          <span>${instructor.description}</span>
+        </span>
+      `;
+      button.addEventListener('click', () => {
+        selectInstructor(instructor.id);
+        if (wrap.id === 'instructorModalChoices') closeInstructorModal();
+      });
+      wrap.appendChild(button);
+    });
+  });
+}
+
+function openInstructorModal() {
+  renderInstructorCards();
+  const modal = $('instructorModal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeInstructorModal() {
+  const modal = $('instructorModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function updateInstructorHeader() {
+  const instructor = getSelectedInstructor();
+  const img = $('selectedInstructorImage');
+  const avatar = $('selectedInstructorAvatar');
+  if (img) {
+    img.src = instructor.image;
+    img.alt = `Portrait of ${instructor.name}`;
+  }
+  if (avatar) avatar.textContent = instructor.initials;
+  if ($('selectedInstructorName')) $('selectedInstructorName').textContent = instructor.name;
+  if ($('selectedInstructorSubtitle')) $('selectedInstructorSubtitle').textContent = `${instructor.title} | ${instructor.shortLabel}`;
+  updateDebriefInstructorHeader();
+}
+
+function updateDebriefInstructorHeader() {
+  const instructor = getSelectedInstructor();
+  const img = $('selectedDebriefInstructorImage');
+  const avatar = $('selectedDebriefInstructorAvatar');
+  if (img) {
+    img.src = instructor.image;
+    img.alt = `Portrait of ${instructor.name}`;
+  }
+  if (avatar) avatar.textContent = instructor.initials;
+  if ($('selectedDebriefInstructorName')) $('selectedDebriefInstructorName').textContent = instructor.name;
+  if ($('selectedDebriefInstructorSubtitle')) $('selectedDebriefInstructorSubtitle').textContent = `Debriefing Facilitator | ${instructor.shortLabel}`;
+}
+
+function personaOpening() {
+  const instructor = getSelectedInstructor();
+  if (instructor.id === 'carlos') {
+    return `Hello ${state.studentName}. I am ${instructor.name}. Mira, today I am going to be direct. Before anyone leaves the ground, I want discipline, evidence, and no guessing. If you do not know, say it clearly, and we fix the gap.`;
+  }
+  if (instructor.id === 'beatrice') {
+    return `Hello ${state.studentName}. I am ${instructor.name}. Well now, we are going to take our time and think this through right. Work at height is not the place for wishful thinking, honey. I want the safest decision you can stand behind.`;
+  }
+  if (instructor.id === 'emily') {
+    return `Hello ${state.studentName}. I am ${instructor.name}. We will work through this together. I will ask you to explain your reasoning clearly, and I will help you connect each answer back to safe practice.`;
+  }
+  return `Hello ${state.studentName}. I am ${instructor.name}. Good to meet you. We will walk through this like a field coaching conversation, so focus on what you would actually check, decide, and do on the job.`;
+}
+
+const $ = (id) => document.getElementById(id);
+
+const voiceState = {
+  enabled: false,
+  muted: false,
+  recording: false,
+  transcribing: false,
+  mediaRecorder: null,
+  mediaStream: null,
+  audioChunks: [],
+  audioContext: null,
+  analyser: null,
+  silenceCheckId: null,
+  maxRecordingTimer: null,
+  noSpeechTimer: null,
+  speechDetected: false,
+  supportedRecording: false,
+  supportedSpeech: false,
+  supportedNaturalSpeech: false,
+  currentAudio: null,
+  currentAudioUrl: null,
+  speechRequestId: 0,
+  mode: 'interview'
+};
+
+function validEmail(email) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email); }
+function addMsg(role, text, options = {}) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  $('chatLog').appendChild(div);
+  $('chatLog').scrollTop = $('chatLog').scrollHeight;
+  if (role === 'interviewer' && options.speak !== false) speakInterviewer(text);
+}
+
+function cleanTextForSpeech(text) {
+  return String(text || '')
+    .replace(/\s+/g, ' ')
+    .replace(/Module (\d+):/gi, 'Module $1,')
+    .trim();
+}
+
+function updateVoiceStatus(message) {
+  if ($('voiceStatus')) $('voiceStatus').textContent = message;
+  if ($('debriefVoiceStatus')) $('debriefVoiceStatus').textContent = message;
+}
+
+function updateDebriefVoiceStatus(message) {
+  if ($('debriefVoiceStatus')) $('debriefVoiceStatus').textContent = message;
+}
+
+function setVoiceWaitIndicator(active, message = 'Preparing voice...') {
+  ['voiceWaitIndicator', 'debriefVoiceWaitIndicator'].forEach(id => {
+    const indicator = $(id);
+    if (!indicator) return;
+    indicator.classList.toggle('hidden', !active);
+    const label = indicator.querySelector('.voiceWaitText');
+    if (label && message) label.textContent = message;
+  });
+}
+
+function refreshVoiceControls() {
+  if ($('toggleVoiceMode')) {
+    $('toggleVoiceMode').textContent = voiceState.enabled ? 'Disable Voice Interview' : 'Enable Voice Interview';
+    $('toggleVoiceMode').classList.toggle('active', voiceState.enabled);
+  }
+  if ($('muteInterviewer')) {
+    $('muteInterviewer').classList.toggle('hidden', !voiceState.enabled);
+    $('muteInterviewer').textContent = voiceState.muted ? 'Unmute Interviewer' : 'Mute Interviewer';
+    $('muteInterviewer').classList.toggle('active', voiceState.enabled && voiceState.muted);
+  }
+  if ($('voiceAnswer')) {
+    $('voiceAnswer').disabled = !voiceState.supportedRecording || voiceState.transcribing;
+    $('voiceAnswer').innerHTML = '<span aria-hidden="true" class="micIcon">🎙️</span><span class="srOnly">Record voice answer</span>';
+    $('voiceAnswer').setAttribute('aria-label', voiceState.recording ? 'Recording voice answer' : 'Record voice answer');
+    $('voiceAnswer').title = voiceState.recording ? 'Recording. You can click to stop early.' : 'Record voice answer';
+    $('voiceAnswer').classList.toggle('active', voiceState.recording && voiceState.mode === 'interview');
+  }
+  if ($('toggleDebriefVoiceMode')) {
+    $('toggleDebriefVoiceMode').textContent = voiceState.enabled ? 'Disable Voice Debriefing' : 'Enable Voice Debriefing';
+    $('toggleDebriefVoiceMode').classList.toggle('active', voiceState.enabled);
+  }
+  if ($('muteDebriefFacilitator')) {
+    $('muteDebriefFacilitator').classList.toggle('hidden', !voiceState.enabled);
+    $('muteDebriefFacilitator').textContent = voiceState.muted ? 'Unmute Facilitator' : 'Mute Facilitator';
+    $('muteDebriefFacilitator').classList.toggle('active', voiceState.enabled && voiceState.muted);
+  }
+  if ($('debriefVoiceAnswer')) {
+    $('debriefVoiceAnswer').disabled = !voiceState.supportedRecording || voiceState.transcribing;
+    $('debriefVoiceAnswer').innerHTML = '<span aria-hidden="true" class="micIcon">🎙️</span><span class="srOnly">Record voice reflection</span>';
+    $('debriefVoiceAnswer').setAttribute('aria-label', voiceState.recording ? 'Recording voice reflection' : 'Record voice reflection');
+    $('debriefVoiceAnswer').title = voiceState.recording ? 'Recording. You can click to stop early.' : 'Record voice reflection';
+    $('debriefVoiceAnswer').classList.toggle('active', voiceState.recording && voiceState.mode === 'debrief');
+  }
+}
+
+function cancelInterviewerSpeech() {
+  setVoiceWaitIndicator(false);
+  voiceState.speechRequestId += 1;
+  if (voiceState.currentAudio) {
+    try { voiceState.currentAudio.pause(); } catch (_) {}
+    voiceState.currentAudio = null;
+  }
+  if (voiceState.currentAudioUrl) {
+    try { URL.revokeObjectURL(voiceState.currentAudioUrl); } catch (_) {}
+    voiceState.currentAudioUrl = null;
+  }
+  if (voiceState.supportedSpeech && window.speechSynthesis) {
+    try { window.speechSynthesis.cancel(); } catch (_) {}
+  }
+}
+
+function base64ToBlob(base64, mimeType) {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+  return new Blob([bytes], { type: mimeType || 'audio/mpeg' });
+}
+
+async function playNaturalInterviewerVoice(text, requestId) {
+  setVoiceWaitIndicator(true, 'Preparing interviewer voice...');
+  updateVoiceStatus('Preparing interviewer voice...');
+  const instructor = getSelectedInstructor();
+  const result = await window.appApi.synthesizeSpeech({
+    text: cleanTextForSpeech(text),
+    voice: instructor.voice || 'cedar',
+    model: 'gpt-4o-mini-tts',
+    instructions: instructor.ttsInstructions || 'Speak naturally as a warm, experienced senior safety instructor. Use a clear professional tone, moderate pace, supportive intonation, and avoid sounding robotic.'
+  });
+  if (requestId !== voiceState.speechRequestId || !result || !result.audioBase64) {
+    setVoiceWaitIndicator(false);
+    return;
+  }
+  const blob = base64ToBlob(result.audioBase64, result.mimeType || 'audio/mpeg');
+  const url = URL.createObjectURL(blob);
+  voiceState.currentAudioUrl = url;
+  const audio = new Audio(url);
+  voiceState.currentAudio = audio;
+  audio.onplay = () => {
+    if (requestId === voiceState.speechRequestId) {
+      setVoiceWaitIndicator(true, 'Interviewer speaking...');
+      updateVoiceStatus('Interviewer speaking...');
+    }
+  };
+  await new Promise((resolve, reject) => {
+    audio.onended = () => {
+      if (voiceState.currentAudio === audio) voiceState.currentAudio = null;
+      if (voiceState.currentAudioUrl === url) {
+        URL.revokeObjectURL(url);
+        voiceState.currentAudioUrl = null;
+      }
+      if (requestId === voiceState.speechRequestId) {
+        setVoiceWaitIndicator(false);
+        updateVoiceStatus(voiceState.mode === 'debrief'
+          ? 'Voice debriefing enabled. Press the microphone once to answer by voice.'
+          : 'Voice interview enabled. Press the microphone once to answer by voice.');
+      }
+      resolve();
+    };
+    audio.onerror = () => {
+      if (requestId === voiceState.speechRequestId) {
+        setVoiceWaitIndicator(false);
+        updateVoiceStatus('Natural voice playback failed. Falling back to system voice.');
+      }
+      reject(new Error('Natural voice playback failed.'));
+    };
+    audio.play().catch(reject);
+  });
+}
+
+function speakWithSystemVoice(text) {
+  setVoiceWaitIndicator(false);
+  if (!voiceState.supportedSpeech) return Promise.resolve();
+  try { window.speechSynthesis.cancel(); } catch (_) {}
+  const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+  const instructor = getSelectedInstructor();
+  utterance.lang = 'en-US';
+  utterance.rate = instructor.id === 'carlos' ? 0.88 : instructor.id === 'beatrice' ? 0.9 : instructor.id === 'emily' ? 0.94 : 0.98;
+  utterance.pitch = instructor.id === 'carlos' ? 0.86 : instructor.id === 'beatrice' ? 1.03 : instructor.id === 'emily' ? 1.08 : 1.01;
+  return new Promise(resolve => {
+    utterance.onend = resolve;
+    utterance.onerror = resolve;
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
+async function speakInterviewer(text) {
+  if (!voiceState.enabled || voiceState.muted) return;
+  cancelInterviewerSpeech();
+  const requestId = voiceState.speechRequestId;
+  if (voiceState.supportedNaturalSpeech) {
+    try {
+      await playNaturalInterviewerVoice(text, requestId);
+      return;
+    } catch (err) {
+      console.error(err);
+      setVoiceWaitIndicator(false);
+      updateVoiceStatus('Natural voice failed. Falling back to system voice for this prompt.');
+    }
+  }
+  if (requestId === voiceState.speechRequestId) return speakWithSystemVoice(text);
+}
+
+function getCurrentInterviewerText() {
+  const messages = Array.from(document.querySelectorAll('#chatLog .msg.interviewer'));
+  if (messages.length) return messages[messages.length - 1].textContent || '';
+  const q = state.interview && state.interview.activeQuestion;
+  return q ? q.question : '';
+}
+
+function getCurrentDebriefText() {
+  const messages = Array.from(document.querySelectorAll('#debriefLog .msg.interviewer'));
+  if (messages.length) return messages[messages.length - 1].textContent || '';
+  return '';
+}
+
+function debriefPersonaOpening() {
+  const instructor = getSelectedInstructor();
+  if (instructor.id === 'carlos') {
+    return `Hello ${state.studentName}. I am ${instructor.name}. Mira, now we debrief the VR activity with discipline and honesty. I want to know what felt real, what helped your judgment, and where this training can be stronger.`;
+  }
+  if (instructor.id === 'beatrice') {
+    return `Hello ${state.studentName}. I am ${instructor.name}. Well now, we are going to slow down and talk through what you experienced in VR. Reflection matters, honey, because that is where safe habits start to settle in.`;
+  }
+  if (instructor.id === 'emily') {
+    return `Hello ${state.studentName}. I am ${instructor.name}. We will reflect on the VR activity together and connect it back to the full learning track. I am interested in what felt useful, what felt unclear, and what would help future learners.`;
+  }
+  return `Hello ${state.studentName}. I am ${instructor.name}. Good work getting to the debriefing stage. Let us treat this like a field reflection and talk about what the VR activity helped you notice, practice, and question.`;
+}
+
+function toggleDebriefVoiceMode() {
+  voiceState.mode = 'debrief';
+  if (!voiceState.supportedNaturalSpeech && !voiceState.supportedSpeech) {
+    updateDebriefVoiceStatus('Voice playback is not available in this Electron/browser build. Text reflection remains available.');
+    return;
+  }
+  voiceState.enabled = !voiceState.enabled;
+  if (!voiceState.enabled) {
+    cancelInterviewerSpeech();
+    stopVoiceRecording();
+  }
+  updateDebriefVoiceStatus(voiceState.enabled
+    ? 'Voice debriefing enabled. The facilitator will read the current prompt aloud. Press the microphone once to answer by voice.'
+    : 'Voice debriefing disabled. Text reflection remains available.');
+  refreshVoiceControls();
+  if (voiceState.enabled) {
+    const currentPrompt = getCurrentDebriefText();
+    if (currentPrompt) speakInterviewer(currentPrompt);
+  }
+}
+
+function toggleDebriefFacilitatorMute() {
+  voiceState.mode = 'debrief';
+  voiceState.muted = !voiceState.muted;
+  if (voiceState.muted) cancelInterviewerSpeech();
+  updateDebriefVoiceStatus(voiceState.muted ? 'Facilitator muted. Text prompts will still appear in the debriefing chat.' : 'Facilitator unmuted. New debriefing prompts will be spoken aloud.');
+  refreshVoiceControls();
+}
+
+async function toggleDebriefVoiceAnswer() {
+  voiceState.mode = 'debrief';
+  await toggleVoiceAnswer();
+}
+
+function setupVoiceFeatures() {
+  voiceState.supportedSpeech = typeof window !== 'undefined' && 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  voiceState.supportedNaturalSpeech = Boolean(window.appApi && window.appApi.synthesizeSpeech);
+  voiceState.supportedRecording = Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.appApi && window.appApi.transcribeAudio);
+  if (!voiceState.supportedRecording) {
+    updateVoiceStatus('Voice recording is not available in this build. Text chat and typed reflection remain available.');
+  } else {
+    if ($('voiceStatus')) $('voiceStatus').textContent = 'Voice interview is optional. Natural interviewer voice is enabled through the voice Worker. Choose your Senior Safety Instructor before starting. Press the microphone once, answer aloud, and the app will transcribe and submit automatically.';
+    if ($('debriefVoiceStatus')) $('debriefVoiceStatus').textContent = 'Voice debriefing is optional. Natural facilitator voice is enabled through the voice Worker. Press the microphone once, speak your reflection, and the app will transcribe and submit automatically.';
+  }
+  refreshVoiceControls();
+}
+
+function toggleVoiceMode() {
+  voiceState.mode = 'interview';
+  if (!voiceState.supportedNaturalSpeech && !voiceState.supportedSpeech) {
+    updateVoiceStatus('Voice playback is not available in this Electron/browser build. Text chat remains available.');
+    return;
+  }
+  voiceState.enabled = !voiceState.enabled;
+  if (!voiceState.enabled) {
+    cancelInterviewerSpeech();
+    stopVoiceRecording();
+  }
+  updateVoiceStatus(voiceState.enabled
+    ? 'Voice interview enabled. The current question will be read aloud. Press the microphone once to answer by voice.'
+    : 'Voice interview disabled. Text chat remains available.');
+  refreshVoiceControls();
+  if (voiceState.enabled) {
+    const currentPrompt = getCurrentInterviewerText();
+    if (currentPrompt) speakInterviewer(currentPrompt);
+  }
+}
+
+function toggleInterviewerMute() {
+  voiceState.mode = 'interview';
+  voiceState.muted = !voiceState.muted;
+  if (voiceState.muted) cancelInterviewerSpeech();
+  updateVoiceStatus(voiceState.muted ? 'Interviewer muted. Text prompts will still appear in the chat.' : 'Interviewer unmuted. New interviewer prompts will be spoken aloud.');
+  refreshVoiceControls();
+}
+
+function getSupportedAudioMimeType() {
+  const candidates = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/ogg;codecs=opus'
+  ];
+  return candidates.find(type => window.MediaRecorder && MediaRecorder.isTypeSupported(type)) || '';
+}
+
+function blobToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(String(reader.result || '').split(',')[1] || '');
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function transcribeVoiceBlob(blob) {
+  const audioBase64 = await blobToBase64(blob);
+  const result = await window.appApi.transcribeAudio({
+    audioBase64,
+    mimeType: blob.type || 'audio/webm',
+    fileName: 'interview-answer.webm'
+  });
+  const transcript = String(result && result.text ? result.text : '').trim();
+  if (!transcript) {
+    updateVoiceStatus('No speech was transcribed. Please record again, speak clearly, or type your answer.');
+    return;
+  }
+  if (voiceState.mode === 'debrief') {
+    const existing = $('debriefAnswerBox') ? $('debriefAnswerBox').value.trim() : '';
+    $('debriefAnswerBox').value = existing ? `${existing} ${transcript}`.replace(/\s+/g, ' ').trim() : transcript;
+    updateDebriefVoiceStatus('Voice reflection transcribed. Submitting automatically...');
+    await submitDebriefingAnswer();
+    return;
+  }
+  const existing = $('answerBox') ? $('answerBox').value.trim() : '';
+  $('answerBox').value = existing ? `${existing} ${transcript}`.replace(/\s+/g, ' ').trim() : transcript;
+  updateVoiceStatus('Voice answer transcribed. Submitting automatically...');
+  await handleAnswer(false);
+}
+
+function clearVoiceTimers() {
+  if (voiceState.silenceCheckId) {
+    cancelAnimationFrame(voiceState.silenceCheckId);
+    voiceState.silenceCheckId = null;
+  }
+  if (voiceState.maxRecordingTimer) {
+    clearTimeout(voiceState.maxRecordingTimer);
+    voiceState.maxRecordingTimer = null;
+  }
+  if (voiceState.noSpeechTimer) {
+    clearTimeout(voiceState.noSpeechTimer);
+    voiceState.noSpeechTimer = null;
+  }
+}
+
+function closeVoiceAudioContext() {
+  if (voiceState.audioContext) {
+    try { voiceState.audioContext.close(); } catch (_) {}
+    voiceState.audioContext = null;
+  }
+  voiceState.analyser = null;
+}
+
+function stopVoiceRecording() {
+  clearVoiceTimers();
+  closeVoiceAudioContext();
+  if (voiceState.mediaRecorder && voiceState.recording) {
+    try { voiceState.mediaRecorder.stop(); } catch (_) {}
+  }
+  if (voiceState.mediaStream) {
+    voiceState.mediaStream.getTracks().forEach(track => track.stop());
+    voiceState.mediaStream = null;
+  }
+  voiceState.recording = false;
+  refreshVoiceControls();
+}
+
+function monitorSpeechAndAutoStop() {
+  if (!voiceState.recording || !voiceState.analyser) return;
+  const data = new Uint8Array(voiceState.analyser.fftSize);
+  let lastVoiceTime = Date.now();
+  const startedAt = Date.now();
+  const minRecordingMs = 1200;
+  const silenceAfterSpeechMs = 1500;
+  const speechThreshold = 10;
+
+  const tick = () => {
+    if (!voiceState.recording || !voiceState.analyser) return;
+    voiceState.analyser.getByteTimeDomainData(data);
+    let sum = 0;
+    for (const value of data) {
+      const centered = value - 128;
+      sum += centered * centered;
+    }
+    const rms = Math.sqrt(sum / data.length);
+    const now = Date.now();
+
+    if (rms > speechThreshold) {
+      voiceState.speechDetected = true;
+      lastVoiceTime = now;
+      if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('Recording. Speak your reflection. I will submit it when you finish.'); else updateVoiceStatus('Recording. Speak your answer. I will submit it when you finish.');
+    }
+
+    if (voiceState.speechDetected && now - startedAt > minRecordingMs && now - lastVoiceTime > silenceAfterSpeechMs) {
+      if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('Detected a pause. Transcribing your reflection...'); else updateVoiceStatus('Detected a pause. Transcribing your answer...');
+      stopVoiceRecording();
+      return;
+    }
+
+    voiceState.silenceCheckId = requestAnimationFrame(tick);
+  };
+
+  voiceState.silenceCheckId = requestAnimationFrame(tick);
+}
+
+async function startVoiceRecording() {
+  try {
+    if (voiceState.mode === 'debrief') {
+      if ($('submitDebriefAnswer')) $('submitDebriefAnswer').disabled = true;
+    } else {
+      if ($('submitAnswer')) $('submitAnswer').disabled = true;
+      if ($('skipAnswer')) $('skipAnswer').disabled = true;
+    }
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    voiceState.mediaStream = stream;
+    voiceState.audioChunks = [];
+    voiceState.speechDetected = false;
+
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (AudioContextClass) {
+      voiceState.audioContext = new AudioContextClass();
+      const source = voiceState.audioContext.createMediaStreamSource(stream);
+      voiceState.analyser = voiceState.audioContext.createAnalyser();
+      voiceState.analyser.fftSize = 1024;
+      source.connect(voiceState.analyser);
+    }
+
+    const mimeType = getSupportedAudioMimeType();
+    const options = mimeType ? { mimeType } : undefined;
+    const recorder = new MediaRecorder(stream, options);
+    voiceState.mediaRecorder = recorder;
+
+    recorder.ondataavailable = event => {
+      if (event.data && event.data.size > 0) voiceState.audioChunks.push(event.data);
+    };
+
+    recorder.onerror = () => {
+      if (voiceState.mode === 'debrief') {
+        updateDebriefVoiceStatus('Recording failed. Please check microphone access or type your reflection.');
+      } else {
+        updateVoiceStatus('Recording failed. Please check microphone access or type your answer.');
+      }
+      stopVoiceRecording();
+      if (voiceState.mode === 'debrief') {
+        if ($('submitDebriefAnswer')) $('submitDebriefAnswer').disabled = false;
+      } else {
+        if ($('submitAnswer')) $('submitAnswer').disabled = false;
+        if ($('skipAnswer')) $('skipAnswer').disabled = false;
+      }
+    };
+
+    recorder.onstop = async () => {
+      clearVoiceTimers();
+      closeVoiceAudioContext();
+      voiceState.recording = false;
+      voiceState.transcribing = true;
+      refreshVoiceControls();
+      if (voiceState.mediaStream) {
+        voiceState.mediaStream.getTracks().forEach(track => track.stop());
+        voiceState.mediaStream = null;
+      }
+      if (!voiceState.audioChunks.length || !voiceState.speechDetected) {
+        voiceState.audioChunks = [];
+        voiceState.transcribing = false;
+        refreshVoiceControls();
+        updateVoiceStatus('No clear speech was detected. Press the microphone and try again, or type your answer.');
+        if (voiceState.mode === 'debrief') {
+          if ($('submitDebriefAnswer')) $('submitDebriefAnswer').disabled = false;
+        } else {
+          if ($('submitAnswer')) $('submitAnswer').disabled = false;
+          if ($('skipAnswer')) $('skipAnswer').disabled = false;
+        }
+        return;
+      }
+      const type = recorder.mimeType || mimeType || 'audio/webm';
+      const audioBlob = new Blob(voiceState.audioChunks, { type });
+      voiceState.audioChunks = [];
+      if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('Transcribing your reflection...'); else updateVoiceStatus('Transcribing your answer...');
+      try {
+        await transcribeVoiceBlob(audioBlob);
+      } catch (err) {
+        console.error(err);
+        updateVoiceStatus(`Transcription failed: ${err.message || err}. Type your answer or try the microphone again.`);
+        if (voiceState.mode === 'debrief') {
+          if ($('submitDebriefAnswer')) $('submitDebriefAnswer').disabled = false;
+        } else {
+          if ($('submitAnswer')) $('submitAnswer').disabled = false;
+          if ($('skipAnswer')) $('skipAnswer').disabled = false;
+        }
+      } finally {
+        voiceState.transcribing = false;
+        refreshVoiceControls();
+      }
+    };
+
+    recorder.start(250);
+    voiceState.recording = true;
+    refreshVoiceControls();
+    if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('Recording. Speak your reflection. I will submit it when you finish.'); else updateVoiceStatus('Recording. Speak your answer. I will submit it when you finish.');
+
+    monitorSpeechAndAutoStop();
+    voiceState.noSpeechTimer = setTimeout(() => {
+      if (voiceState.recording && !voiceState.speechDetected) {
+        if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('No speech detected yet. Stopping the recording.'); else updateVoiceStatus('No speech detected yet. Stopping the recording.');
+        stopVoiceRecording();
+      }
+    }, 9000);
+    const maxRecordingMs = voiceState.mode === 'debrief' ? 180000 : 120000;
+    voiceState.maxRecordingTimer = setTimeout(() => {
+      if (voiceState.recording) {
+        if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('Maximum recording time reached. Transcribing your reflection...'); else updateVoiceStatus('Maximum recording time reached. Transcribing your answer...');
+        if (voiceState.analyser) voiceState.speechDetected = true;
+        stopVoiceRecording();
+      }
+    }, maxRecordingMs);
+  } catch (err) {
+    console.error(err);
+    if (voiceState.mode === 'debrief') updateDebriefVoiceStatus('Microphone access failed. Allow microphone permission in the app/system settings, or type your reflection.'); else updateVoiceStatus('Microphone access failed. Allow microphone permission in the app/system settings, or type your answer.');
+    stopVoiceRecording();
+    if (voiceState.mode === 'debrief') {
+      if ($('submitDebriefAnswer')) $('submitDebriefAnswer').disabled = false;
+    } else {
+      if ($('submitAnswer')) $('submitAnswer').disabled = false;
+      if ($('skipAnswer')) $('skipAnswer').disabled = false;
+    }
+  }
+}
+
+async function toggleVoiceAnswer() {
+  if (!voiceState.mode) voiceState.mode = 'interview';
+  if (!voiceState.supportedRecording) {
+    updateVoiceStatus('Voice recording is not available in this build. Please type your answer.');
+    return;
+  }
+  if (voiceState.recording) {
+    updateVoiceStatus('Recording stopped manually. Transcribing your answer...');
+    if (!voiceState.speechDetected) voiceState.speechDetected = true;
+    stopVoiceRecording();
+  } else {
+    await startVoiceRecording();
+  }
+}
+
+
+function stopNarrationForUserAction() {
+  // Any user navigation/action should immediately stop the current narrator audio.
+  // Incrementing speechRequestId also prevents delayed TTS responses from starting after the user moved on.
+  cancelInterviewerSpeech();
+}
+
+function setTab(tab) {
+  stopNarrationForUserAction();
+  state.currentTab = tab;
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  $(`tab${tab}`).classList.add('active');
+  document.querySelectorAll('.tabs button').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.tab) === tab));
+  if (tab === 6) updateCertificatePreview();
+  updateStatus();
+  saveSession();
+}
+function unlock(tab) { document.querySelector(`.tabs button[data-tab="${tab}"]`).disabled = false; }
+
+function lockTabsAfterOrientation() {
+  document.querySelectorAll('.tabs button').forEach(btn => {
+    const tabNumber = Number(btn.dataset.tab);
+    btn.disabled = tabNumber !== 1;
+    btn.classList.toggle('active', tabNumber === 1);
+  });
+}
+
+function normalizeReadinessLevel(value) {
+  const text = String(value || '').toLowerCase();
+  if (text.includes('expert') || text.includes('strong')) return 'Expert';
+  if (text.includes('intermediate')) return 'Intermediate';
+  if (text.includes('basic') || text.includes('needs review') || text.includes('beginner')) return 'Basic';
+  return null;
+}
+
+function readinessPoints(value) {
+  const level = normalizeReadinessLevel(value);
+  if (level === 'Expert') return 3;
+  if (level === 'Intermediate') return 2;
+  if (level === 'Basic') return 1;
+  return 1;
+}
+
+function calculateOverallReadiness() {
+  const total = readinessPoints(state.expertiseAfterSmartChats)
+    + readinessPoints(state.expertiseAfterInterview)
+    + readinessPoints(state.expertiseAfterQuiz)
+    + readinessPoints(state.vrExpertiseLevel);
+  if (total >= 11) return 'Expert';
+  if (total >= 7) return 'Intermediate';
+  return 'Basic';
+}
+
+function readinessMessage(level) {
+  if (level === 'Expert') return 'Congratulations. You demonstrated an Expert level of readiness and successfully completed the Working at Height Learning Track.';
+  if (level === 'Intermediate') return 'You successfully completed the Working at Height Learning Track with an Intermediate readiness level. Additional review is recommended to strengthen mastery of advanced concepts.';
+  return 'You successfully completed the Working at Height Learning Track with a Basic readiness level. Additional study and practice are recommended before performing complex work-at-height activities independently.';
+}
+
+function updateCertificatePreview() {
+  const overall = calculateOverallReadiness();
+  if ($('certStudentName')) $('certStudentName').textContent = state.studentName || 'Learner Name';
+  if ($('certEmail')) $('certEmail').textContent = state.studentEmail || 'Not available';
+  if ($('certDate')) $('certDate').textContent = new Date().toLocaleDateString();
+  if ($('certSmart')) $('certSmart').textContent = state.expertiseAfterSmartChats || 'Not available';
+  if ($('certInterview')) $('certInterview').textContent = state.expertiseAfterInterview || 'Not available';
+  if ($('certQuiz')) $('certQuiz').textContent = state.expertiseAfterQuiz || 'Not available';
+  if ($('certVR')) $('certVR').textContent = state.vrExpertiseLevel || 'Not identified';
+  if ($('certOverallLevel')) $('certOverallLevel').textContent = overall;
+  if ($('certOverallBadge')) {
+    $('certOverallBadge').textContent = overall;
+    $('certOverallBadge').className = `readinessBadge ${overall.toLowerCase()}`;
+  }
+  if ($('certificateReadinessMessage')) $('certificateReadinessMessage').textContent = readinessMessage(overall);
+  if ($('retakeProgram')) $('retakeProgram').classList.toggle('hidden', overall === 'Expert');
+}
+
+
+const SESSION_STORAGE_PREFIX = 'workingAtHeightSession:';
+const promptedSessionEmails = new Set();
+let restoringSession = false;
+
+function normalizedSessionEmail(email = state.studentEmail) {
+  return String(email || '').trim().toLowerCase();
+}
+
+function sessionStorageKey(email = state.studentEmail) {
+  const normalized = normalizedSessionEmail(email);
+  return normalized ? `${SESSION_STORAGE_PREFIX}${normalized}` : '';
+}
+
+function cloneSessionState(source = state) {
+  return JSON.parse(JSON.stringify(source));
+}
+
+function saveSession() {
+  if (restoringSession || !validEmail(state.studentEmail)) return;
+  try {
+    const snapshot = cloneSessionState(state);
+    snapshot.savedAt = new Date().toISOString();
+    localStorage.setItem(sessionStorageKey(), JSON.stringify(snapshot));
+  } catch (err) {
+    console.warn('Session could not be saved.', err);
+  }
+}
+
+function loadSavedSession(email) {
+  const key = sessionStorageKey(email);
+  if (!key) return null;
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  } catch (err) {
+    console.warn('Session could not be loaded.', err);
+    return null;
+  }
+}
+
+function clearSavedSession(email = state.studentEmail) {
+  const key = sessionStorageKey(email);
+  if (key) localStorage.removeItem(key);
+}
+
+function getFirstUnfinishedTab(saved = state) {
+  const orientationDone = Boolean(saved.orientationCompleted || saved.smartchatsCompleted || saved.interviewCompleted || saved.quizCompleted || saved.debriefingCompleted || saved.certificateDownloaded);
+  if (!orientationDone) return 1;
+  if (!saved.smartchatsCompleted) return 2;
+  if (!saved.interviewCompleted) return 3;
+  if (!saved.quizCompleted) return 4;
+  if (!saved.debriefingCompleted) return 5;
+  if (!saved.certificateDownloaded) return 6;
+  return 6;
+}
+
+function resetIncompleteWorkFromTab(tab) {
+  if (tab <= 2) {
+    state.smartchatsCompleted = false;
+    state.expertiseAfterSmartChats = null;
+    state.smartQuestionCount = 0;
+    state.smartSummary = '';
+  }
+  if (tab <= 3) {
+    state.interviewCompleted = false;
+    state.interviewScore = 0;
+    state.expertiseAfterInterview = null;
+    state.interview = { currentModule: 1, currentLevel: 'basic', history: [], usedIds: [], recommendations: [], summary: '', activeQuestion: null };
+  }
+  if (tab <= 4) {
+    state.quizCompleted = false;
+    state.quizScore = null;
+    state.expertiseAfterQuiz = null;
+    state.quiz = { currentModule: 1, currentLevel: 'basic', history: [], usedIds: [], recommendations: [], summary: '', module5ExpertEncountered: false, activeQuestion: null, pendingNext: null };
+  }
+  if (tab <= 5) {
+    state.vrCompleted = false;
+    state.vrExpertiseLevel = null;
+    state.debriefingCompleted = false;
+    state.debriefing = { vrReportFileName: '', vrReportText: '', vrSummary: '', history: [], turn: 0, followUpAsked: false, summary: '' };
+  }
+  if (tab <= 6) {
+    state.certificateDownloaded = false;
+  }
+}
+
+function applySessionToState(saved) {
+  restoringSession = true;
+  try {
+    Object.keys(state).forEach(key => {
+      if (Object.prototype.hasOwnProperty.call(saved, key)) state[key] = saved[key];
+    });
+    state.orientationCompleted = Boolean(state.orientationCompleted || state.smartchatsCompleted || state.interviewCompleted || state.quizCompleted || state.debriefingCompleted || state.certificateDownloaded);
+    if (!state.selectedInstructorId || !safetyInstructors[state.selectedInstructorId]) state.selectedInstructorId = 'jake';
+
+    const resumeTab = getFirstUnfinishedTab(state);
+    resetIncompleteWorkFromTab(resumeTab);
+    state.currentTab = resumeTab;
+
+    rebuildInterfaceFromState(resumeTab);
+  } finally {
+    restoringSession = false;
+  }
+}
+
+function rebuildInterfaceFromState(resumeTab = getFirstUnfinishedTab(state)) {
+  cancelInterviewerSpeech();
+  stopVoiceRecording();
+
+  if ($('studentName')) $('studentName').value = state.studentName || '';
+  if ($('studentEmail')) $('studentEmail').value = state.studentEmail || '';
+
+  lockTabsAfterOrientation();
+  for (let i = 1; i <= resumeTab; i += 1) unlock(i);
+
+  if ($('smartCsv')) $('smartCsv').value = '';
+  if ($('smartResults')) {
+    $('smartResults').innerHTML = state.smartchatsCompleted
+      ? `<p><span class="badge">${state.expertiseAfterSmartChats || 'Completed'}</span></p><p>${state.smartSummary || 'SmartChats analysis completed.'}</p>`
+      : 'No CSV loaded.';
+  }
+  if ($('completeSmart')) $('completeSmart').disabled = !state.smartchatsCompleted;
+
+  if ($('chatLog')) $('chatLog').innerHTML = '';
+  if ($('answerBox')) $('answerBox').value = '';
+  if ($('interviewIntro')) $('interviewIntro').classList.toggle('hidden', state.interviewCompleted);
+  if ($('interviewBox')) $('interviewBox').classList.add('hidden');
+  if ($('interviewComplete')) $('interviewComplete').classList.toggle('hidden', !state.interviewCompleted);
+  if ($('unlockQuiz')) $('unlockQuiz').disabled = !state.interviewCompleted;
+
+  if ($('quizIntro')) $('quizIntro').classList.toggle('hidden', state.quizCompleted);
+  if ($('quizBox')) $('quizBox').classList.add('hidden');
+  if ($('quizComplete')) $('quizComplete').classList.toggle('hidden', !state.quizCompleted);
+  if ($('quizSummaryText') && state.quizCompleted) $('quizSummaryText').textContent = `${state.quiz.summary || 'Quiz completed.'} ${state.quiz.vrMessage || ''}`.trim();
+  if ($('quizFeedback')) $('quizFeedback').classList.add('hidden');
+  if ($('quizOptions')) $('quizOptions').replaceChildren();
+  if ($('unlockDebrief')) $('unlockDebrief').disabled = !state.quizCompleted;
+
+  if ($('debriefIntro')) $('debriefIntro').classList.toggle('hidden', state.debriefingCompleted);
+  if ($('debriefBox')) $('debriefBox').classList.add('hidden');
+  if ($('debriefComplete')) $('debriefComplete').classList.toggle('hidden', !state.debriefingCompleted);
+  if ($('debriefLog')) $('debriefLog').innerHTML = '';
+  if ($('debriefAnswerBox')) $('debriefAnswerBox').value = '';
+  if ($('vrReportStatus')) {
+    $('vrReportStatus').innerHTML = state.vrCompleted
+      ? `<p><strong>Uploaded:</strong> ${state.debriefing.vrReportFileName || 'VR report'}</p><p><strong>VR Expertise Level:</strong> ${state.vrExpertiseLevel || 'Not identified'}</p><p>${state.debriefing.vrSummary || 'VR report analyzed.'}</p>`
+      : 'No VR report uploaded.';
+  }
+  if ($('startDebrief')) $('startDebrief').disabled = !state.vrCompleted;
+  if ($('continueCertificate')) $('continueCertificate').disabled = !state.debriefingCompleted;
+
+  renderInstructorCards();
+  updateInstructorHeader();
+  updateCertificatePreview();
+  refreshTab1();
+  setTab(resumeTab);
+}
+
+function checkForSavedSessionAfterEmailEntry() {
+  const email = normalizedSessionEmail($('studentEmail') ? $('studentEmail').value : state.studentEmail);
+  if (!validEmail(email) || promptedSessionEmails.has(email)) return;
+  const saved = loadSavedSession(email);
+  if (!saved) return;
+  const resumeTab = getFirstUnfinishedTab(saved);
+  if (resumeTab <= 1 && !saved.orientationCompleted) return;
+  promptedSessionEmails.add(email);
+  const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'Debriefing', 6: 'Certificate' };
+  const savedName = saved.studentName ? ` for ${saved.studentName}` : '';
+  const shouldContinue = window.confirm(`A previous learning track session was found${savedName}.\n\nContinue from Step ${resumeTab}: ${stepLabels[resumeTab]}?\n\nChoose OK to continue, or Cancel to start over.`);
+  if (shouldContinue) {
+    applySessionToState(saved);
+    saveSession();
+  } else {
+    clearSavedSession(email);
+    resetProgramForRetake();
+    state.studentEmail = email;
+    if ($('studentEmail')) $('studentEmail').value = email;
+    refreshTab1();
+  }
+}
+
+function resetProgramForRetake() {
+  cancelInterviewerSpeech();
+  stopVoiceRecording();
+  const keepName = state.studentName;
+  const keepEmail = state.studentEmail;
+
+  state.studentName = keepName;
+  state.studentEmail = keepEmail;
+  state.currentTab = 1;
+  state.selectedInstructorId = 'jake';
+  state.orientationCompleted = false;
+
+  state.smartchatsCompleted = false;
+  state.expertiseAfterSmartChats = null;
+  state.smartQuestionCount = 0;
+  state.smartSummary = '';
+
+  state.interviewCompleted = false;
+  state.interviewScore = 0;
+  state.expertiseAfterInterview = null;
+
+  state.quizCompleted = false;
+  state.quizScore = null;
+  state.expertiseAfterQuiz = null;
+
+  state.vrCompleted = false;
+  state.vrExpertiseLevel = null;
+  state.debriefingCompleted = false;
+  state.certificateDownloaded = false;
+
+  state.interview = { currentModule: 1, currentLevel: 'basic', history: [], usedIds: [], recommendations: [], summary: '' };
+  state.quiz = { currentModule: 1, currentLevel: 'basic', history: [], usedIds: [], recommendations: [], summary: '', module5ExpertEncountered: false, activeQuestion: null, pendingNext: null };
+  state.debriefing = { vrReportFileName: '', vrReportText: '', vrSummary: '', history: [], turn: 0, followUpAsked: false, summary: '' };
+
+  if ($('studentName')) $('studentName').value = keepName;
+  if ($('studentEmail')) $('studentEmail').value = keepEmail;
+
+  if ($('smartCsv')) $('smartCsv').value = '';
+  if ($('smartResults')) $('smartResults').innerHTML = 'No CSV loaded.';
+  if ($('completeSmart')) $('completeSmart').disabled = true;
+
+  if ($('chatLog')) $('chatLog').innerHTML = '';
+  if ($('answerBox')) $('answerBox').value = '';
+  if ($('interviewIntro')) $('interviewIntro').classList.remove('hidden');
+  if ($('interviewBox')) $('interviewBox').classList.add('hidden');
+  if ($('interviewComplete')) $('interviewComplete').classList.add('hidden');
+  if ($('unlockQuiz')) $('unlockQuiz').disabled = true;
+
+  if ($('quizIntro')) $('quizIntro').classList.remove('hidden');
+  if ($('quizBox')) $('quizBox').classList.add('hidden');
+  if ($('quizComplete')) $('quizComplete').classList.add('hidden');
+  if ($('quizFeedback')) $('quizFeedback').classList.add('hidden');
+  if ($('quizOptions')) $('quizOptions').replaceChildren();
+  if ($('unlockDebrief')) $('unlockDebrief').disabled = true;
+
+  if ($('debriefIntro')) $('debriefIntro').classList.remove('hidden');
+  if ($('debriefBox')) $('debriefBox').classList.add('hidden');
+  if ($('debriefComplete')) $('debriefComplete').classList.add('hidden');
+  if ($('debriefLog')) $('debriefLog').innerHTML = '';
+  if ($('debriefAnswerBox')) $('debriefAnswerBox').value = '';
+  if ($('vrReportStatus')) $('vrReportStatus').innerHTML = 'No VR report uploaded.';
+  if ($('startDebrief')) $('startDebrief').disabled = true;
+  if ($('continueCertificate')) $('continueCertificate').disabled = true;
+
+  lockTabsAfterOrientation();
+  setTab(1);
+  renderInstructorCards();
+  updateInstructorHeader();
+  refreshTab1();
+  updateCertificatePreview();
+  saveSession();
+}
+function updateStatus() {
+  $('statusName').textContent = state.studentName || 'Not started';
+  $('statusEmail').textContent = state.studentEmail || 'Not started';
+  $('statusSmart').textContent = state.expertiseAfterSmartChats || 'Not completed';
+  $('statusInterview').textContent = state.expertiseAfterInterview || 'Not completed';
+  $('statusQuiz').textContent = state.expertiseAfterQuiz || 'Not completed';
+  $('statusVR').textContent = state.vrCompleted ? (state.vrExpertiseLevel ? `Completed (${state.vrExpertiseLevel})` : 'Completed') : 'Not completed';
+  $('statusDebriefing').textContent = state.debriefingCompleted ? 'Completed' : 'Not completed';
+  $('statusCertificate').textContent = state.certificateDownloaded ? 'Downloaded' : 'Not downloaded';
+  const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'Debriefing', 6: 'Certificate' };
+  $('statusProgress').textContent = stepLabels[state.currentTab] || `Step ${state.currentTab}`;
+}
+function refreshTab1() {
+  state.studentName = $('studentName').value.trim();
+  state.studentEmail = $('studentEmail').value.trim();
+  const ok = state.studentName.length > 1 && validEmail(state.studentEmail);
+  $('openSmartChats').disabled = !ok;
+  $('completeLearning').disabled = !ok;
+  updateStatus();
+  setTimeout(checkForSavedSessionAfterEmailEntry, 250);
+}
+
+function classifySmartChats(rows) {
+  const email = state.studentEmail.toLowerCase();
+  const matched = rows.filter(r => String(r.studentEmail || r.email || '').trim().toLowerCase() === email);
+  const qs = matched.map(r => String(r.question || r.Question || r.message || '').toLowerCase()).filter(Boolean);
+  if (qs.length === 0) return { count: 0, level: 'Expert', summary: 'No questions found for this email. Following the project rule, this is classified as Expert because the learner may already possess mastery.' };
+  const advancedWords = ['why','how','scenario','suspend','risk assessment','external influence','restrictive','emergency','supervisor','decision','continue','weather'];
+  const introWords = ['what is','what are','tell me','module about','define','meaning'];
+  let advanced = 0, intro = 0;
+  qs.forEach(q => { if (advancedWords.some(w => q.includes(w))) advanced++; if (introWords.some(w => q.includes(w))) intro++; });
+  let level = 'Intermediate';
+  if (advanced >= Math.max(2, qs.length * .45)) level = 'Expert';
+  else if (intro >= qs.length * .6) level = 'Basic';
+  return { count: qs.length, level, summary: `Found ${qs.length} SmartChats question(s) for ${state.studentEmail}. Introductory patterns: ${intro}. Application/advanced safety reasoning patterns: ${advanced}. Classified as ${level}.` };
+}
+
+function initialLevelFromSmartChats() {
+  if (state.expertiseAfterSmartChats === 'Expert') return 'expert';
+  if (state.expertiseAfterSmartChats === 'Intermediate') return 'intermediate';
+  return 'basic';
+}
+function chooseQuestion(module, level) {
+  const pool = questionBank.filter(q => q.module === module && q.difficulty === level && !state.interview.usedIds.includes(q.id));
+  const fallback = questionBank.filter(q => q.module === module && q.difficulty === level);
+  const selected = (pool.length ? pool : fallback)[Math.floor(Math.random() * (pool.length ? pool.length : fallback.length))];
+  state.interview.usedIds.push(selected.id);
+  return selected;
+}
+function makeSegue(prevEval, nextQuestion) {
+  const instructor = getSelectedInstructor();
+  if (!prevEval) {
+    if (instructor.id === 'carlos') return `Vamos. We start with Module ${nextQuestion.module}: ${nextQuestion.moduleTitle}. I expect a clear safety answer, not guessing. Tell me what you would check first and why.\n\n${nextQuestion.question}`;
+    if (instructor.id === 'beatrice') return `Well now, let's start with Module ${nextQuestion.module}: ${nextQuestion.moduleTitle}. Take your time, but give me the safest decision you can defend out there in the real world.\n\n${nextQuestion.question}`;
+    if (instructor.id === 'emily') return `Let's begin with Module ${nextQuestion.module}: ${nextQuestion.moduleTitle}. You're not just choosing an answer here. I want to hear your reasoning and how you would keep the team safe.\n\n${nextQuestion.question}`;
+    return `Let's get started with Module ${nextQuestion.module}: ${nextQuestion.moduleTitle}. Good field decisions come from noticing the right details, so walk me through your thinking.\n\n${nextQuestion.question}`;
+  }
+  let prefix = prevEval.correctness === 'Correct'
+    ? `Based on that, I am going to continue at a stronger level of reasoning.`
+    : `Let's use that as a learning moment and continue with a foundational prompt in the next module.`;
+  if (instructor.id === 'carlos') {
+    prefix = prevEval.correctness === 'Correct'
+      ? `Exacto. That is disciplined thinking. Now I am raising the level, so stay sharp.`
+      : `Mira, that answer is not tight enough yet. We are stepping back to rebuild the foundation before you move on.`;
+  } else if (instructor.id === 'beatrice') {
+    prefix = prevEval.correctness === 'Correct'
+      ? `Well now, that was solid. You kept your safety thinking where it belongs, so let us make it a little more demanding.`
+      : `Now listen, that part needs shoring up. We are going to step back and make sure this foundation is safe and sound.`;
+  } else if (instructor.id === 'emily') {
+    prefix = prevEval.correctness === 'Correct'
+      ? `Nice work. You explained enough of your reasoning that we can move into a stronger question.`
+      : `That gives us a useful starting point. Let's reinforce the foundation together before we raise the difficulty.`;
+  } else if (instructor.id === 'jake') {
+    prefix = prevEval.correctness === 'Correct'
+      ? `Good catch. That is the kind of reasoning we want in the field, so I am going to increase the challenge.`
+      : `Let's walk through that again at a foundation level. There is a field decision here that needs to be clearer.`;
+  }
+  return `${prefix}\n\nNow let's shift to Module ${nextQuestion.module}: ${nextQuestion.moduleTitle}.\n\n${nextQuestion.question}`;
+}
+
+function personaReinforcement(correctness) {
+  const instructor = getSelectedInstructor();
+  if (instructor.id === 'carlos') {
+    return correctness === 'Correct'
+      ? 'Exacto. That is the level of discipline I expect.'
+      : 'Mira, not enough yet. Your safety reasoning needs to be sharper and more precise.';
+  }
+  if (instructor.id === 'beatrice') {
+    return correctness === 'Correct'
+      ? 'That is right, honey. You kept the safety decision clear and steady.'
+      : 'Well now, you are on the path, but we need to make that answer safer and clearer before I let it pass.';
+  }
+  if (instructor.id === 'emily') {
+    return correctness === 'Correct'
+      ? 'Good work. You explained that clearly and connected it to safe practice.'
+      : 'You are on the right track. Let us strengthen the safety concept behind your answer.';
+  }
+  return correctness === 'Correct'
+    ? 'Good catch. You connected your answer to the safety logic we need in the field.'
+    : 'Good start. Let us walk through the field decision that still needs to be stronger.';
+}
+
+function localEvaluate(question, answer, skipped=false) {
+  if (skipped) return {
+    score: 0, correctness: 'Skipped', isCorrect: false,
+    positiveReinforcement: getSelectedInstructor().id === 'carlos' ? 'Good. Honesty is better than pretending, but now you need to review this.' : getSelectedInstructor().id === 'beatrice' ? 'That is alright, honey. Better to say you do not know than make up a safety answer.' : getSelectedInstructor().id === 'jake' ? 'Good call being honest. In the field, guessing is how people get hurt.' : 'Thank you for being honest. That gives us a safe place to review from.',
+    explanation: `This concept is important in Module ${question.module}. Review the recommended chapters before continuing.`,
+    improvementGuidanceText: 'Review the concept and try to connect it to practical work-at-height decisions.',
+    recommendations: question.recommendedChapters
+  };
+  const text = answer.toLowerCase();
+  const points = question.expectedAnswerPoints || [];
+  const hits = points.filter(p => p.toLowerCase().split(/\W+/).filter(w => w.length > 4).some(w => text.includes(w))).length;
+  const ratio = points.length ? hits / points.length : 0;
+  let correctness = 'Incorrect', score = 0, isCorrect = false;
+  if (ratio >= .55 || (question.difficulty === 'basic' && ratio >= .35)) { correctness = 'Correct'; score = question.maxScore; isCorrect = true; }
+  else if (ratio >= .25) { correctness = 'Partially Correct'; score = Math.max(.5, question.maxScore / 2); }
+  return {
+    score, correctness, isCorrect,
+    positiveReinforcement: personaReinforcement(correctness),
+    explanation: correctness === 'Correct'
+      ? 'Your answer included enough of the expected safety reasoning for this level.'
+      : `A stronger answer should mention: ${points.slice(0,3).join('; ')}.`,
+    improvementGuidanceText: `Recommended review: ${question.recommendedChapters.map(c => `Module ${c.module} ${c.chapter} ${c.topic}`).join('; ')}.`,
+    recommendations: question.recommendedChapters
+  };
+}
+
+function extractJsonObject(text) {
+  if (!text) throw new Error('Empty API response');
+  if (typeof text === 'object') return text;
+  const cleaned = String(text).trim().replace(/^```json/i, '').replace(/^```/, '').replace(/```$/, '').trim();
+  try { return JSON.parse(cleaned); } catch (_) {}
+  const first = cleaned.indexOf('{');
+  const last = cleaned.lastIndexOf('}');
+  if (first >= 0 && last > first) return JSON.parse(cleaned.slice(first, last + 1));
+  throw new Error('API response did not contain valid JSON');
+}
+
+function normalizeEvaluation(raw, question) {
+  const parsed = raw || {};
+  const evaluation = parsed.evaluation || parsed;
+  const correctness = ['Correct', 'Partially Correct', 'Incorrect', 'Skipped'].includes(evaluation.correctness)
+    ? evaluation.correctness
+    : 'Partially Correct';
+  const score = Math.min(Math.max(Number(evaluation.score || 0), 0), question.maxScore);
+  return {
+    score,
+    correctness,
+    isCorrect: Boolean(evaluation.isCorrect) && correctness === 'Correct',
+    positiveReinforcement: evaluation.positiveReinforcement || 'Thank you. I appreciate your response.',
+    explanation: evaluation.explanation || 'Let us connect your answer back to the NR-35 safety reasoning for this module.',
+    improvementGuidanceText: evaluation.improvementGuidanceText || '',
+    recommendations: evaluation.recommendations || question.recommendedChapters,
+    interviewerMessage: parsed.nextInterviewerMessage || evaluation.interviewerMessage || '',
+    shouldAdvance: parsed.shouldAdvance
+  };
+}
+
+function buildConversationContext() {
+  return state.interview.history.slice(-4).map((h, i) => ({
+    turn: i + 1,
+    module: h.question.module,
+    moduleTitle: h.question.moduleTitle,
+    difficulty: h.question.difficulty,
+    questionAsked: h.question.question,
+    learnerAnswer: h.skipped ? 'I do not know / skipped' : h.answer,
+    correctness: h.evaluation.correctness,
+    score: h.evaluation.score
+  }));
+}
+
+async function evaluateWithApi(question, answer, skipped=false) {
+  if (skipped) {
+    const ev = localEvaluate(question, answer, true);
+    ev.interviewerMessage = `${ev.positiveReinforcement}
+
+${ev.explanation}
+
+${ev.improvementGuidanceText || ''}`;
+    return ev;
+  }
+
+  const instructor = getSelectedInstructor();
+
+  const prompt = `You are ${instructor.name}, the selected Senior Safety Instructor for an NR-35 work-at-height learning track.
+Persona and communication style: ${instructor.systemStyle}
+Your role is to make the experience feel like a live safety-readiness interview, not a quiz.
+You must evaluate the learner's answer and respond conversationally.
+Use only the supplied expected answer points and recommendations. Do not invent safety thresholds, wind limits, rain limits, or external regulations.
+
+Return valid JSON only. Do not include markdown.
+
+Required JSON shape:
+{
+  "evaluation": {
+    "score": number,
+    "correctness": "Correct" | "Partially Correct" | "Incorrect",
+    "isCorrect": boolean,
+    "positiveReinforcement": string,
+    "explanation": string,
+    "improvementGuidanceText": string,
+    "recommendations": [{"module": number, "chapter": string, "topic": string}]
+  },
+  "nextInterviewerMessage": string,
+  "shouldAdvance": boolean
+}
+
+Scoring rules:
+- Maximum score for this question is ${question.maxScore}.
+- isCorrect must be true only when the learner fully meets the level.
+- Partial answers receive partial credit but shouldAdvance should normally be false unless the missing point is minor.
+- Unsafe misconceptions should be Incorrect and shouldAdvance false.
+
+Conversation requirements for nextInterviewerMessage:
+- Stay fully in the selected instructor persona: ${instructor.systemStyle}
+- Sound like an experienced Senior Safety Instructor.
+- Start by reacting to the learner's answer.
+- Briefly explain what was strong or missing.
+- Do not ask the next bank question. The app will add the next question after your feedback.
+- Keep it concise, warm, and professional.
+
+Recent interview context:
+${JSON.stringify(buildConversationContext())}
+
+Current module: Module ${question.module}: ${question.moduleTitle}
+Difficulty: ${question.difficulty}
+Current interviewer prompt: ${question.question}
+Expected answer points: ${question.expectedAnswerPoints.join(' | ')}
+Recommended chapters: ${JSON.stringify(question.recommendedChapters)}
+Learner answer: ${answer}`;
+
+  try {
+    if (window.appApi.callCimatec) {
+      const content = await window.appApi.callCimatec({
+        maxTokens: config.maxTokens || 1200,
+        messages: [
+          { role: 'system', content: `You are ${instructor.name}, the selected Senior Safety Instructor for an NR-35 work-at-height learning track. ${instructor.systemStyle} Return valid JSON only. Do not include markdown.` },
+          { role: 'user', content: prompt }
+        ]
+      });
+      const parsed = extractJsonObject(content);
+      return normalizeEvaluation(parsed, question);
+    }
+
+    if (!config.apiEndpoint || config.apiEndpoint.includes('YOUR-CLOUDFLARE-WORKER')) throw new Error('Worker URL not configured');
+    const res = await fetch(config.apiEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messages: [
+          { role: 'system', content: `You are ${instructor.name}, the selected Senior Safety Instructor for an NR-35 work-at-height learning track. ${instructor.systemStyle} Return valid JSON only. Do not include markdown.` },
+          { role: 'user', content: prompt }
+        ],
+        maxTokens: config.maxTokens || 1200
+      })
+    });
+    if (!res.ok) throw new Error(`API ${res.status}`);
+    const data = await res.json();
+    const parsed = extractJsonObject(data.content ?? data.result ?? data);
+    return normalizeEvaluation(parsed, question);
+  } catch (e) {
+    if (config.useLocalFallbackWhenApiFails) {
+      const ev = localEvaluate(question, answer, false);
+      ev.interviewerMessage = `${ev.positiveReinforcement}
+
+${ev.explanation}
+
+${ev.improvementGuidanceText || ''}`;
+      return ev;
+    }
+    throw e;
+  }
+}
+
+function advanceInterview(wasCorrect, level) {
+  if (wasCorrect) {
+    if (level === 'basic') return { module: state.interview.currentModule, level: 'intermediate' };
+    if (level === 'intermediate') return { module: state.interview.currentModule, level: 'expert' };
+    return { module: state.interview.currentModule + 1, level: 'expert' };
+  }
+  return { module: state.interview.currentModule + 1, level: 'basic' };
+}
+function finishInterview() {
+  const h = state.interview.history;
+  const earned = h.reduce((s,x) => s + Number(x.evaluation.score || 0), 0);
+  const possible = h.reduce((s,x) => s + Number(x.question.maxScore || 0), 0);
+  const expertCorrect = h.filter(x => x.question.difficulty === 'expert' && x.evaluation.isCorrect).length;
+  const intermediateCorrect = h.filter(x => x.question.difficulty === 'intermediate' && x.evaluation.isCorrect).length;
+  const skipped = h.filter(x => x.skipped).length;
+  const pct = possible ? Math.round((earned/possible)*100) : 0;
+  state.interviewScore = `${earned}/${possible} (${pct}%)`;
+  state.expertiseAfterInterview = expertCorrect >= 4 && pct >= 75 ? 'Expert' : (intermediateCorrect >= 3 && pct >= 55 ? 'Intermediate' : 'Basic');
+  const recMap = new Map();
+  h.forEach(x => { if (!x.evaluation.isCorrect) (x.evaluation.recommendations || x.question.recommendedChapters).forEach(r => recMap.set(`${r.module}-${r.chapter}`, r)); });
+  state.interview.recommendations = [...recMap.values()];
+  state.interview.summary = `The learner completed an adaptive Expert Interviewer conversation with ${h.length} prompt(s). Earned score: ${state.interviewScore}. Skipped responses: ${skipped}. Expertise after interview: ${state.expertiseAfterInterview}.`;
+  state.interviewCompleted = true;
+  updateStatus();
+  $('interviewBox').classList.add('hidden');
+  $('interviewComplete').classList.remove('hidden');
+  saveSession();
+}
+async function handleAnswer(skipped=false) {
+  stopVoiceRecording();
+  const answer = skipped ? "I don't know" : $('answerBox').value.trim();
+  if (!skipped && !answer) return alert('Please type an answer or select I Don\'t Know.');
+  const q = state.interview.activeQuestion;
+  addMsg('user', skipped ? "I don't know." : answer);
+  $('answerBox').value = '';
+  $('submitAnswer').disabled = true; $('skipAnswer').disabled = true;
+  setVoiceWaitIndicator(true, 'Analyzing answer...');
+  updateVoiceStatus('Analyzing your answer...');
+  const evaluation = await evaluateWithApi(q, answer, skipped);
+  const feedbackText = evaluation.interviewerMessage || `${evaluation.positiveReinforcement}
+
+${evaluation.explanation}
+
+${evaluation.improvementGuidanceText || ''}`;
+  setVoiceWaitIndicator(false);
+  addMsg('interviewer', feedbackText, { speak: false });
+  state.interview.history.push({ question: q, answer, skipped, evaluation });
+  const next = advanceInterview(Boolean(evaluation.isCorrect), q.difficulty);
+  state.interview.currentModule = next.module; state.interview.currentLevel = next.level;
+  if (next.module > 8) {
+    speakInterviewer(feedbackText);
+    return finishInterview();
+  }
+  const nq = chooseQuestion(next.module, next.level);
+  state.interview.activeQuestion = nq;
+  saveSession();
+  const segueText = makeSegue(evaluation, nq);
+
+  // Display the next prompt without triggering a second speech event.
+  // Otherwise speechSynthesis.cancel() inside speakInterviewer() can stop the feedback mid-sentence.
+  setTimeout(() => addMsg('interviewer', segueText, { speak: false }), 250);
+
+  // Read the feedback and the next question as one uninterrupted turn.
+  speakInterviewer(`${feedbackText}
+
+${segueText}`);
+  $('submitAnswer').disabled = false; $('skipAnswer').disabled = false;
+}
+
+
+function initialQuizLevelFromInterview() {
+  if (state.expertiseAfterInterview === 'Expert') return 'expert';
+  if (state.expertiseAfterInterview === 'Intermediate') return 'intermediate';
+  return 'basic';
+}
+
+function chooseQuizQuestion(module, level) {
+  const pool = finalQuizBank.filter(q => q.module === module && q.difficulty === level && !state.quiz.usedIds.includes(q.id));
+  const fallback = finalQuizBank.filter(q => q.module === module && q.difficulty === level);
+  const source = pool.length ? pool : fallback;
+  if (!source.length) throw new Error(`No quiz question found for Module ${module}, ${level}`);
+  const selected = source[Math.floor(Math.random() * source.length)];
+  state.quiz.usedIds.push(selected.id);
+  if (selected.module === 5 && selected.difficulty === 'expert') state.quiz.module5ExpertEncountered = true;
+  return selected;
+}
+
+function renderQuizQuestion() {
+  const q = state.quiz.activeQuestion;
+  $('quizModuleBadge').textContent = `Module ${q.module}: ${q.moduleTitle}`;
+  $('quizDifficultyBadge').textContent = levelLabels[q.difficulty] || q.difficulty;
+  $('quizProgressText').textContent = `Questions presented: ${state.quiz.history.length + 1}`;
+  $('quizQuestionText').textContent = q.question;
+  $('quizFeedback').classList.add('hidden');
+  $('quizFeedback').innerHTML = '';
+  $('nextQuizQuestion').classList.add('hidden');
+  $('submitQuizAnswer').classList.remove('hidden');
+  $('submitQuizAnswer').disabled = false;
+
+  // Important: rebuild the option controls from the active question every time.
+  // This prevents stale answers from a previous question remaining on screen.
+  const optionsRoot = $('quizOptions');
+  optionsRoot.replaceChildren();
+  const radioName = `quizOption_${state.quiz.history.length + 1}`;
+
+  q.options.forEach((opt, idx) => {
+    const label = document.createElement('label');
+    label.className = 'option';
+
+    const input = document.createElement('input');
+    input.type = 'radio';
+    input.name = radioName;
+    input.value = String(idx);
+    input.dataset.quizOption = 'true';
+
+    const span = document.createElement('span');
+    span.textContent = opt;
+
+    label.appendChild(input);
+    label.appendChild(span);
+    optionsRoot.appendChild(label);
+  });
+}
+
+function advanceQuiz(correct, question) {
+  const currentModule = question.module;
+  const level = question.difficulty;
+
+  // Special Module 5 rule: every learner must encounter an Expert-level Module 5 question.
+  // If Module 5 is reached at Basic or Intermediate, remain in Module 5 until Expert is presented.
+  if (currentModule === 5 && level !== 'expert') {
+    if (level === 'basic') return { module: 5, level: correct ? 'intermediate' : 'expert' };
+    if (level === 'intermediate') return { module: 5, level: 'expert' };
+  }
+
+  if (correct) {
+    if (level === 'basic') return { module: currentModule, level: 'intermediate' };
+    if (level === 'intermediate') return { module: currentModule, level: 'expert' };
+    return { module: currentModule + 1, level: 'expert' };
+  }
+  return { module: currentModule + 1, level: 'basic' };
+}
+
+function classifyQuizLevel(pct) {
+  if (pct < 50) return 'Basic';
+  if (pct < 85) return 'Intermediate';
+  return 'Expert';
+}
+
+function finishQuizAdaptive() {
+  const h = state.quiz.history;
+  const earned = h.reduce((s, x) => s + Number(x.earnedPoints || 0), 0);
+  const possible = h.reduce((s, x) => s + Number(x.question.points || 0), 0);
+  const correctCount = h.filter(x => x.correct).length;
+  const pct = possible ? Math.round((earned / possible) * 100) : 0;
+  state.quizScore = `${earned}/${possible} (${pct}%)`;
+  state.expertiseAfterQuiz = classifyQuizLevel(pct);
+  state.quizCompleted = true;
+
+  const recMap = new Map();
+  h.forEach(x => {
+    if (!x.correct) (x.question.recommendedChapters || []).forEach(r => recMap.set(`${r.module}-${r.chapter}`, r));
+  });
+  state.quiz.recommendations = [...recMap.values()];
+  state.quiz.summary = `The learner completed the adaptive Final Quiz with ${h.length} question(s). Correct answers: ${correctCount}. Earned score: ${state.quizScore}. Readiness classification: ${state.expertiseAfterQuiz}. Module 5 Expert question encountered: ${state.quiz.module5ExpertEncountered ? 'Yes' : 'No'}.`;
+  state.quiz.vrMessage = state.expertiseAfterQuiz === 'Basic'
+    ? 'You completed the quiz. Additional review is recommended before participating in more advanced work-at-height activities.'
+    : 'Congratulations. You may now experience the Virtual Reality simulation.';
+
+  $('quizBox').classList.add('hidden');
+  $('quizComplete').classList.remove('hidden');
+  $('quizSummaryText').textContent = state.quiz.summary + ' ' + state.quiz.vrMessage;
+  updateStatus();
+  saveSession();
+}
+
+function submitQuizAnswer() {
+  const q = state.quiz.activeQuestion;
+  const selected = document.querySelector('input[data-quiz-option="true"]:checked');
+  if (!selected) return alert('Please select an answer before continuing.');
+  const selectedIndex = Number(selected.value);
+  const correct = selectedIndex === q.correctIndex;
+  const earnedPoints = correct ? q.points : 0;
+  const selectedText = q.options[selectedIndex];
+  const correctText = q.options[q.correctIndex];
+  state.quiz.history.push({ question: q, selectedIndex, selectedText, correctText, correct, earnedPoints });
+
+  const recText = !correct && q.recommendedChapters && q.recommendedChapters.length
+    ? `<p><strong>Recommended review:</strong> ${q.recommendedChapters.map(r => `Module ${r.module}, Chapter ${r.chapter}: ${r.topic}`).join('; ')}</p>`
+    : '';
+  $('quizFeedback').innerHTML = `
+    <p><strong>${correct ? 'Correct' : 'Incorrect'}</strong></p>
+    <p><strong>Correct answer:</strong> ${correctText}</p>
+    <p>${q.explanation}</p>
+    ${recText}
+  `;
+  $('quizFeedback').classList.remove('hidden');
+  document.querySelectorAll('input[data-quiz-option="true"]').forEach(input => input.disabled = true);
+  $('submitQuizAnswer').classList.add('hidden');
+  $('nextQuizQuestion').classList.remove('hidden');
+  state.quiz.pendingNext = advanceQuiz(correct, q);
+  saveSession();
+}
+
+function continueQuiz() {
+  const next = state.quiz.pendingNext;
+  if (!next || next.module > 8) return finishQuizAdaptive();
+  state.quiz.currentModule = next.module;
+  state.quiz.currentLevel = next.level;
+  state.quiz.activeQuestion = chooseQuizQuestion(next.module, next.level);
+  renderQuizQuestion();
+  saveSession();
+}
+
+function startQuizAdaptive() {
+  $('quizIntro').classList.add('hidden');
+  $('quizBox').classList.remove('hidden');
+  $('quizComplete').classList.add('hidden');
+  state.quiz = { currentModule: 1, currentLevel: initialQuizLevelFromInterview(), history: [], usedIds: [], recommendations: [], summary: '', module5ExpertEncountered: false, activeQuestion: null, pendingNext: null };
+  state.quiz.activeQuestion = chooseQuizQuestion(state.quiz.currentModule, state.quiz.currentLevel);
+  renderQuizQuestion();
+  saveSession();
+}
+
+
+function addDebriefMsg(role, text, options = {}) {
+  const div = document.createElement('div');
+  div.className = `msg ${role}`;
+  div.textContent = text;
+  $('debriefLog').appendChild(div);
+  $('debriefLog').scrollTop = $('debriefLog').scrollHeight;
+  state.debriefing.history.push({ role, text });
+  if (role === 'interviewer' && options.speak !== false && voiceState.mode === 'debrief') speakInterviewer(text);
+}
+
+function extractVrExpertiseLevel(text) {
+  const match = String(text || '').match(/(?:expertise|level|readiness)\s*(?:level)?\s*[:\-]\s*([^\n\r]+)/i);
+  if (match) return match[1].trim().slice(0, 80);
+  if (/expert/i.test(text)) return 'Expert';
+  if (/intermediate/i.test(text)) return 'Intermediate';
+  if (/basic|beginner/i.test(text)) return 'Basic';
+  return 'Not identified';
+}
+
+async function summarizeVrReport() {
+  const fallback = () => {
+    const excerpt = state.debriefing.vrReportText.slice(0, 600).replace(/\s+/g, ' ').trim();
+    state.debriefing.vrSummary = excerpt || 'No readable text was found in the VR report.';
+    state.vrExpertiseLevel = extractVrExpertiseLevel(state.debriefing.vrReportText);
+  };
+  try {
+    const content = await window.appApi.callCimatec({
+      maxTokens: 700,
+      messages: [
+        { role: 'system', content: 'You summarize VR training reports for a work-at-height learning track. Return concise plain text only.' },
+        { role: 'user', content: `Read this VR experience report. Identify the VR expertise level if present and summarize the general comments in 4 to 6 sentences. Do not invent information.\n\n${state.debriefing.vrReportText}` }
+      ]
+    });
+    state.debriefing.vrSummary = content.trim() || 'No summary generated.';
+    state.vrExpertiseLevel = extractVrExpertiseLevel(state.debriefing.vrReportText + '\n' + content);
+  } catch (e) {
+    fallback();
+  }
+}
+
+function buildDebriefingContext() {
+  return {
+    studentName: state.studentName,
+    smartChatsLevel: state.expertiseAfterSmartChats,
+    interviewLevel: state.expertiseAfterInterview,
+    quizLevel: state.expertiseAfterQuiz,
+    quizScore: state.quizScore,
+    vrExpertiseLevel: state.vrExpertiseLevel,
+    vrSummary: state.debriefing.vrSummary,
+    recentDebriefingMessages: state.debriefing.history.slice(-8)
+  };
+}
+
+async function nextDebriefingMessage(userAnswer) {
+  state.debriefing.turn += 1;
+  const isFinalTurn = state.debriefing.turn >= 4;
+  const instructor = getSelectedInstructor();
+  const system = `You are ${instructor.name}, a supportive debriefing facilitator for an NR-35 Working at Height Learning Track. This is reflective, not a quiz. Ask about the whole learning track, the VR experience, what was good, what was not good, and what the learner would improve. Ask at least one follow-up question based on the learner response. Do not invent safety thresholds. Keep responses concise and conversational. Use this persona style: ${instructor.systemStyle}`;
+  const prompt = `Use the context and learner answer to continue the debriefing.\n\nRules:\n- If this is the first or second learner answer, ask a natural follow-up question based on the answer.\n- Before the end, ask about the entire learning track and what was good or not good.\n- If finalTurn is true, thank the learner and say the Working at Height Learning Track is complete. Do not ask another question.\n\nReturn JSON only with keys: message, followUpAsked, complete, summary.\n\nfinalTurn: ${isFinalTurn}\ncontext: ${JSON.stringify(buildDebriefingContext())}\nlearnerAnswer: ${userAnswer}`;
+  try {
+    const content = await window.appApi.callCimatec({
+      maxTokens: 900,
+      messages: [
+        { role: 'system', content: system + ' Return valid JSON only.' },
+        { role: 'user', content: prompt }
+      ]
+    });
+    const jsonText = content.match(/\{[\s\S]*\}/)?.[0] || content;
+    const parsed = JSON.parse(jsonText);
+    if (isFinalTurn) {
+      parsed.complete = true;
+      parsed.followUpAsked = false;
+      if (!parsed.message || parsed.message.includes('?')) {
+        parsed.message = 'Thank you for completing the debriefing. Your reflections help connect the learning modules, the Expert Interviewer, the Final Quiz, and the VR experience. You have completed the Working at Height Learning Track. Your certificate is now ready.';
+      }
+    }
+    if (!isFinalTurn && parsed.followUpAsked) state.debriefing.followUpAsked = true;
+    if (parsed.summary) state.debriefing.summary = parsed.summary;
+    return parsed;
+  } catch (e) {
+    if (isFinalTurn) {
+      return {
+        message: 'Thank you for completing the debriefing. Your reflections help connect the learning modules, the Expert Interviewer, the Final Quiz, and the VR experience. You have completed the Working at Height Learning Track. Your certificate is now ready.',
+        followUpAsked: state.debriefing.followUpAsked,
+        complete: true,
+        summary: 'The learner completed a reflective debriefing about the learning track and VR experience.'
+      };
+    }
+    state.debriefing.followUpAsked = true;
+    return {
+      message: 'Thank you for that reflection. Can you tell me one thing from the VR activity that felt most useful, and one thing that could be improved for future learners?',
+      followUpAsked: true,
+      complete: false,
+      summary: ''
+    };
+  }
+}
+
+async function startDebriefing() {
+  $('debriefIntro').classList.add('hidden');
+  $('debriefBox').classList.remove('hidden');
+  voiceState.mode = 'debrief';
+  updateDebriefInstructorHeader();
+  const opening = `${debriefPersonaOpening()}\n\nI reviewed your VR experience report.\n\nVR expertise level: ${state.vrExpertiseLevel || 'Not identified'}\n\nSummary: ${state.debriefing.vrSummary}\n\nBefore we finish the learning track, what part of the VR activity felt most realistic, useful, or memorable to you?`;
+  addDebriefMsg('interviewer', opening);
+  saveSession();
+}
+
+async function submitDebriefingAnswer() {
+  if (state.debriefingCompleted) return;
+  const answer = $('debriefAnswerBox').value.trim();
+  if (!answer) return alert('Please type your reflection before continuing.');
+  $('debriefAnswerBox').value = '';
+  $('submitDebriefAnswer').disabled = true;
+  addDebriefMsg('user', answer);
+  addDebriefMsg('interviewer', 'Thank you. Let me reflect on that...', { speak: false });
+  const response = await nextDebriefingMessage(answer);
+  const lastMessage = document.querySelector('#debriefLog .msg.interviewer:last-child');
+  if (lastMessage) lastMessage.textContent = response.message;
+  const lastHistory = state.debriefing.history[state.debriefing.history.length - 1];
+  if (lastHistory && lastHistory.role === 'interviewer') lastHistory.text = response.message;
+  if (response.summary) state.debriefing.summary = response.summary;
+  const shouldFinish = Boolean(response.complete || state.debriefing.turn >= 4);
+
+  if (voiceState.enabled && !voiceState.muted) {
+    try {
+      await speakInterviewer(response.message);
+    } catch (_) {
+      // If speech fails, keep the text response and continue the debriefing flow.
+    }
+  }
+
+  if (shouldFinish) {
+    finishDebriefing();
+  } else if (!state.debriefingCompleted) {
+    $('submitDebriefAnswer').disabled = false;
+    saveSession();
+  }
+}
+
+function finishDebriefing() {
+  state.vrCompleted = true;
+  state.debriefingCompleted = true;
+  if (!state.debriefing.summary) {
+    state.debriefing.summary = 'The learner completed a reflective debriefing about the learning track and VR experience.';
+  }
+  $('debriefBox').classList.add('hidden');
+  $('debriefComplete').classList.remove('hidden');
+  updateStatus();
+  saveSession();
+}
+
+async function init() {
+  questionBank = await window.appApi.readJson('data/question-bank.json');
+  finalQuizBank = await window.appApi.readJson('data/final-quiz-bank.json');
+  config = await window.appApi.readJson('data/config.json');
+  updateStatus();
+  renderInstructorCards();
+  updateInstructorHeader();
+  updateDebriefInstructorHeader();
+  setupVoiceFeatures();
+
+  if ($('beginTrack')) {
+    $('beginTrack').addEventListener('click', () => {
+      $('welcomePage').classList.add('hidden');
+      $('appShell').classList.remove('hidden');
+      setTab(1);
+    });
+  }
+
+  if ($('retakeProgram')) {
+    $('retakeProgram').addEventListener('click', resetProgramForRetake);
+  }
+
+  document.querySelectorAll('.tabs button').forEach(btn => btn.addEventListener('click', () => { if (!btn.disabled) setTab(Number(btn.dataset.tab)); }));
+  $('studentName').addEventListener('input', refreshTab1);
+  $('studentEmail').addEventListener('input', refreshTab1);
+  $('openSmartChats').addEventListener('click', () => window.appApi.openExternal(`https://smartchats.info/course/whs?=${encodeURIComponent(state.studentEmail)}`));
+  $('downloadEbook').addEventListener('click', async () => { const r = await window.appApi.saveEbook(); if (!r.canceled) alert(`Ebook saved to ${r.filePath}`); });
+  $('completeLearning').addEventListener('click', () => { state.orientationCompleted = true; unlock(2); setTab(2); saveSession(); });
+  $('smartCsv').addEventListener('change', e => {
+    const file = e.target.files[0]; if (!file) return;
+    Papa.parse(file, { header: true, skipEmptyLines: true, complete: res => {
+      const result = classifySmartChats(res.data);
+      state.smartQuestionCount = result.count; state.expertiseAfterSmartChats = result.level; state.smartSummary = result.summary; state.smartchatsCompleted = true;
+      $('smartResults').innerHTML = `<p><span class="badge">${result.level}</span></p><p>${result.summary}</p>`;
+      $('completeSmart').disabled = false; updateStatus(); saveSession();
+    }});
+  });
+  $('completeSmart').addEventListener('click', () => { unlock(3); setTab(3); saveSession(); });
+  if ($('toggleVoiceMode')) $('toggleVoiceMode').addEventListener('click', toggleVoiceMode);
+  if ($('muteInterviewer')) $('muteInterviewer').addEventListener('click', toggleInterviewerMute);
+  if ($('voiceAnswer')) $('voiceAnswer').addEventListener('click', () => { voiceState.mode = 'interview'; toggleVoiceAnswer(); });
+  if ($('changeInstructorAvatar')) $('changeInstructorAvatar').addEventListener('click', openInstructorModal);
+  if ($('changeDebriefInstructorAvatar')) $('changeDebriefInstructorAvatar').addEventListener('click', openInstructorModal);
+  if ($('toggleDebriefVoiceMode')) $('toggleDebriefVoiceMode').addEventListener('click', toggleDebriefVoiceMode);
+  if ($('muteDebriefFacilitator')) $('muteDebriefFacilitator').addEventListener('click', toggleDebriefFacilitatorMute);
+  if ($('debriefVoiceAnswer')) $('debriefVoiceAnswer').addEventListener('click', toggleDebriefVoiceAnswer);
+  if ($('closeInstructorModal')) $('closeInstructorModal').addEventListener('click', closeInstructorModal);
+  if ($('instructorModal')) $('instructorModal').addEventListener('click', e => { if (e.target === $('instructorModal')) closeInstructorModal(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeInstructorModal(); });
+  document.addEventListener('click', e => {
+    const button = e.target && e.target.closest ? e.target.closest('button') : null;
+    if (!button) return;
+    stopNarrationForUserAction();
+  }, true);
+  $('startInterview').addEventListener('click', () => {
+    voiceState.mode = 'interview';
+    $('interviewIntro').classList.add('hidden'); $('interviewBox').classList.remove('hidden');
+    updateInstructorHeader();
+    state.interview.currentModule = 1; state.interview.currentLevel = initialLevelFromSmartChats();
+    const q = chooseQuestion(1, state.interview.currentLevel); state.interview.activeQuestion = q;
+    addMsg('interviewer', `${personaOpening()}
+
+Welcome to the Interview stage of the Working at Height Learning Track. I will guide you through questions about work-at-height safety, hazard recognition, weather-related decisions, and practical judgment. If you are unsure, you may select I Don't Know and continue.
+
+${makeSegue(null, q)}`);
+    saveSession();
+  });
+  $('submitAnswer').addEventListener('click', () => handleAnswer(false));
+  $('skipAnswer').addEventListener('click', () => handleAnswer(true));
+  $('exportInterview').addEventListener('click', async () => { const r = await window.appApi.saveInterviewReport(state); if (!r.canceled) { $('unlockQuiz').disabled = false; saveSession(); alert(`Report saved to ${r.filePath}`); } });
+  $('unlockQuiz').addEventListener('click', () => { unlock(4); setTab(4); saveSession(); });
+  $('startQuiz').addEventListener('click', startQuizAdaptive);
+  $('submitQuizAnswer').addEventListener('click', submitQuizAnswer);
+  $('nextQuizQuestion').addEventListener('click', continueQuiz);
+  $('exportQuiz').addEventListener('click', async () => { const r = await window.appApi.saveQuizReport(state); if (!r.canceled) { $('unlockDebrief').disabled = false; saveSession(); alert(`Quiz report saved to ${r.filePath}`); } });
+  $('unlockDebrief').addEventListener('click', () => { unlock(5); setTab(5); saveSession(); });
+  $('uploadVrReport').addEventListener('click', async () => {
+    const result = await window.appApi.selectVrReport();
+    if (result.canceled) return;
+    state.debriefing.vrReportFileName = result.fileName;
+    state.debriefing.vrReportText = result.text || '';
+    $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p>Reading and summarizing VR report...</p>`;
+    await summarizeVrReport();
+    state.vrCompleted = true;
+    $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p><strong>VR Expertise Level:</strong> ${state.vrExpertiseLevel}</p><p>${state.debriefing.vrSummary}</p>`;
+    $('startDebrief').disabled = false;
+    updateStatus();
+    saveSession();
+  });
+  $('startDebrief').addEventListener('click', startDebriefing);
+  $('submitDebriefAnswer').addEventListener('click', submitDebriefingAnswer);
+  $('exportDebrief').addEventListener('click', async () => { const r = await window.appApi.saveDebriefingReport(state); if (!r.canceled) { $('continueCertificate').disabled = false; saveSession(); alert(`Debriefing report saved to ${r.filePath}`); } });
+  $('continueCertificate').addEventListener('click', () => { unlock(6); updateCertificatePreview(); setTab(6); saveSession(); });
+  $('downloadCertificate').addEventListener('click', async () => { updateCertificatePreview(); const r = await window.appApi.saveCertificate(state); if (!r.canceled) { state.certificateDownloaded = true; updateStatus(); saveSession(); alert(`Certificate saved to ${r.filePath}`); } });
+}
+init();

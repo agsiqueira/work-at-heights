@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Working at Height Learning Track</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <section id="welcomePage" class="welcomePage">
+    <div class="welcomeShell">
+      <div class="welcomeCard">
+        <div class="welcomeLogoRow">
+          <img src="assets/logo.png" alt="Program logo" />
+          <span class="heroBadge">Learning Track</span>
+        </div>
+        <p class="eyebrow">NR-35 Weather and Safety Focus</p>
+        <h1>Working at Height Learning Track</h1>
+        <p class="welcomeLead">Welcome to a guided learning experience designed to help you review core NR-35 concepts, reflect on weather-related safety decisions, demonstrate readiness through an adaptive interview and quiz, and complete a final debriefing after the VR activity.</p>
+        <div class="welcomeHighlights">
+          <div>
+            <strong>Learn</strong>
+            <span>Watch the module videos, review the ebook, and ask questions in SmartChats.</span>
+          </div>
+          <div>
+            <strong>Demonstrate</strong>
+            <span>Complete an adaptive interview and quiz that respond to your level of understanding.</span>
+          </div>
+          <div>
+            <strong>Reflect</strong>
+            <span>Connect the VR activity to the full learning track through a guided debriefing.</span>
+          </div>
+        </div>
+        <p class="welcomeNote">This program is part of the full Learning Track. Each step builds evidence of completion and prepares you for the final certificate.</p>
+        <button id="beginTrack" class="primary largeButton">Enter Learning Track</button>
+      </div>
+    </div>
+  </section>
+
+  <div id="appShell" class="hidden">
+    <header class="topbar">
+      <div class="brandLockup">
+        <img src="assets/logo.png" alt="Program logo" />
+        <div>
+          <p class="eyebrow">NR-35 Weather and Safety Focus</p>
+          <h1>Working at Height Learning Track</h1>
+          <p class="heroCopy">A guided adaptive pathway through SmartChats, interview, quiz, VR reflection, and certification.</p>
+        </div>
+      </div>
+      <div class="heroBadge">Learning Track</div>
+    </header>
+
+    <main class="layout">
+      <aside class="status">
+        <div class="statusHeader">
+          <span class="statusIcon">✓</span>
+          <div>
+            <h2>Learner Status</h2>
+            <p>Track progress and readiness</p>
+          </div>
+        </div>
+
+        <div class="learnerCard">
+          <p><strong>Name</strong><span id="statusName">Not started</span></p>
+          <p><strong>Email</strong><span id="statusEmail">Not started</span></p>
+        </div>
+
+        <div class="statusList">
+          <p><strong>SmartChats</strong><span id="statusSmart">Not completed</span></p>
+          <p><strong>Interview</strong><span id="statusInterview">Not completed</span></p>
+          <p><strong>Quiz</strong><span id="statusQuiz">Not completed</span></p>
+          <p><strong>VR</strong><span id="statusVR">Not completed</span></p>
+          <p><strong>Debriefing</strong><span id="statusDebriefing">Not completed</span></p>
+          <p><strong>Certificate</strong><span id="statusCertificate">Not downloaded</span></p>
+        </div>
+
+        <div class="progressPill">
+          <strong>Current Step</strong>
+          <span id="statusProgress">Orientation</span>
+        </div>
+      </aside>
+
+      <section class="content">
+        <nav class="tabs" aria-label="Learning track steps">
+          <button data-tab="1" class="active"><span>1</span> Orientation</button>
+          <button data-tab="2" disabled><span>2</span> SmartChats</button>
+          <button data-tab="3" disabled><span>3</span> Interview</button>
+          <button data-tab="4" disabled><span>4</span> Quiz</button>
+          <button data-tab="5" disabled><span>5</span> Debriefing</button>
+          <button data-tab="6" disabled><span>6</span> Certificate</button>
+        </nav>
+
+        <section id="tab1" class="tab active">
+          <div class="pageTitle">
+            <p class="eyebrow">Step 1</p>
+            <h2>Orientation</h2>
+            <p>Enter your information to personalize the learning track. Then open SmartChats, watch the module videos, ask questions, and download the NR-35 ebook for review.</p>
+          </div>
+
+          <div class="gridTwo">
+            <div class="panel featurePanel">
+              <h3>Set up your learning track</h3>
+              <p>Your name will appear on reports and the certificate. Your email will be used to personalize the SmartChats link and match your exported interaction logs later.</p>
+              <label>Full Name <input id="studentName" autocomplete="name" placeholder="Type your full name" /></label>
+              <label>Email Address <input id="studentEmail" type="email" autocomplete="email" placeholder="name@example.com" /></label>
+              <p class="hint">The SmartChats button becomes active after a valid name and email are entered.</p>
+              <div class="actions">
+                <button id="openSmartChats" class="primary" disabled>Open SmartChats</button>
+                <button id="downloadEbook" class="secondary">Download NR-35 Ebook</button>
+              </div>
+              <button id="completeLearning" class="success" disabled>I Completed the Learning Modules</button>
+            </div>
+
+            <div class="panel infoPanel">
+              <h3>Before continuing</h3>
+              <ol class="checklist">
+                <li>Watch the required SmartChats module videos.</li>
+                <li>Ask questions about concepts that are unclear.</li>
+                <li>Export your SmartChats interaction analytics as a CSV file.</li>
+                <li>Return here to continue into the adaptive interview and quiz.</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section id="tab2" class="tab">
+          <div class="pageTitle">
+            <p class="eyebrow">Step 2</p>
+            <h2>SmartChats Analysis</h2>
+            <p>Upload the analytics CSV exported from SmartChats. The system will analyze only the records that match the email entered during Orientation.</p>
+          </div>
+          <div class="panel uploadPanel">
+            <h3>Upload SmartChats CSV</h3>
+            <p>This step estimates your starting readiness level based on the number and type of questions you asked during the video-based learning modules.</p>
+            <input type="file" id="smartCsv" accept=".csv" />
+            <div id="smartResults" class="panel muted resultPanel">No CSV loaded.</div>
+            <button id="completeSmart" class="primary" disabled>Continue to Interview</button>
+          </div>
+        </section>
+
+        <section id="tab3" class="tab">
+          <div class="pageTitle">
+            <p class="eyebrow">Step 3</p>
+            <h2>Interview</h2>
+            <p class="subtitle">Conversational Safety Readiness Interview</p>
+          </div>
+          <div id="interviewIntro" class="panel featurePanel">
+            <h3>Choose your Senior Safety Instructor</h3>
+            <p>This is not a traditional quiz. During this conversation, the selected Instructor will ask you to explain safety-related decisions in your own words, adapt the difficulty based on your responses, and recommend relevant ebook chapters when additional review would be beneficial.</p>
+            <div id="instructorChoices" class="instructorChoices" aria-label="Choose a Senior Safety Instructor"></div>
+            <p class="hint">Select a portrait to choose the instructor voice, personality, and conversational style for the interview.</p>
+            <button id="startInterview" class="primary">Start Interview</button>
+          </div>
+          <div id="interviewBox" class="chat hidden">
+            <div class="chatHeader interviewHeader">
+              <div class="chatIdentity selectedInstructorIdentity">
+                <button id="changeInstructorAvatar" class="instructorAvatarButton" type="button" aria-label="Change Senior Safety Instructor">
+                  <img id="selectedInstructorImage" class="instructorHeaderImage" src="assets/instructors/jake-miller.svg" alt="Portrait of selected instructor" />
+                  <span id="selectedInstructorAvatar" class="avatar fallbackInstructorAvatar">JM</span>
+                </button>
+                <div>
+                  <h3 id="selectedInstructorName">Jake Miller</h3>
+                  <p id="selectedInstructorSubtitle">Senior Safety Instructor | Jake, Tampa, Florida instructor</p>
+                </div>
+              </div>
+              <div class="voiceControls" aria-label="Interview voice controls">
+                <div id="voiceWaitIndicator" class="voiceWaitIndicator hidden" aria-live="polite">
+                  <span class="voiceSpinner" aria-hidden="true"></span>
+                  <span class="voiceWaitText">Preparing voice...</span>
+                </div>
+                <button id="toggleVoiceMode" class="secondary" type="button">Enable Voice Interview</button>
+                <button id="muteInterviewer" class="secondary hidden" type="button">Mute Interviewer</button>
+              </div>
+            </div>
+            <div id="chatLog"></div>
+            <div class="chatComposer">
+              <textarea id="answerBox" placeholder="Type your answer here, or record and transcribe a voice answer..."></textarea>
+              <div class="actions">
+                <button id="submitAnswer" class="primary">Submit Answer</button>
+                <button id="voiceAnswer" class="secondary micButton" type="button" aria-label="Record voice answer" title="Record voice answer"><span aria-hidden="true" class="micIcon">🎙️</span><span class="srOnly">Record voice answer</span></button>
+                <button id="skipAnswer" class="secondary">I Don't Know</button>
+              </div>
+              <p id="voiceStatus" class="hint voiceStatus">Voice interview is optional. If voice capture stops, the text already captured remains in the box. Press Record Voice Answer again to add more, or continue typing.</p>
+            </div>
+          </div>
+          <div id="interviewComplete" class="panel successPanel hidden">
+            <h3>Interview Complete</h3>
+            <p>Export your interview report before continuing. The report includes your score, readiness level, feedback, and recommended review chapters.</p>
+            <button id="exportInterview" class="primary">Export Interview Report</button>
+            <button id="unlockQuiz" class="success" disabled>Continue to Quiz</button>
+          </div>
+        </section>
+
+        <section id="tab4" class="tab">
+          <div class="pageTitle">
+            <p class="eyebrow">Step 4</p>
+            <h2>Quiz</h2>
+            <p class="subtitle">Adaptive Readiness Assessment</p>
+          </div>
+          <div id="quizIntro" class="panel featurePanel">
+            <h3>Confirm readiness before VR</h3>
+            <p>The Readiness Quiz evaluates your understanding of the concepts covered throughout the program.</p>
+            <p>Questions are designed to assess your ability to recognize hazards, apply safe work practices, and make appropriate decisions in work-at-height situations.</p>
+            <p>Read each question carefully and select the best answer.</p>
+            <button id="startQuiz" class="primary">Start Quiz</button>
+          </div>
+          <div id="quizBox" class="panel quizCard hidden">
+            <div class="quizMeta">
+              <span id="quizModuleBadge" class="badge">Module</span>
+              <span id="quizDifficultyBadge" class="badge">Difficulty</span>
+              <span id="quizProgressText" class="hint">Progress</span>
+            </div>
+            <h3 id="quizQuestionText"></h3>
+            <div id="quizOptions" class="quizOptions"></div>
+            <div class="actions">
+              <button id="submitQuizAnswer" class="primary">Submit Answer</button>
+              <button id="nextQuizQuestion" class="success hidden">Continue</button>
+            </div>
+            <div id="quizFeedback" class="panel muted resultPanel hidden"></div>
+          </div>
+          <div id="quizComplete" class="panel successPanel hidden">
+            <h3>Quiz Complete</h3>
+            <p id="quizSummaryText"></p>
+            <button id="exportQuiz" class="primary">Export Quiz Report</button>
+            <button id="unlockDebrief" class="success" disabled>Continue to Debriefing</button>
+          </div>
+        </section>
+
+        <section id="tab5" class="tab">
+          <div class="pageTitle">
+            <p class="eyebrow">Step 5</p>
+            <h2>Debriefing</h2>
+            <p class="subtitle">Reflective Learning Track Debriefing</p>
+          </div>
+          <div id="debriefIntro" class="panel featurePanel">
+            <h3>Reflect on the full experience</h3>
+            <p>Upload the Word document generated from the VR experience. The system will read the report, identify the VR expertise level when available, and use it to guide a short reflection about the VR activity and the complete learning track.</p>
+            <h3>Choose your Debriefing Facilitator</h3>
+            <p class="hint">Use the same Senior Safety Instructor personas from the interview, including their conversational style, regional voice, and coaching approach.</p>
+            <div id="debriefInstructorChoices" class="instructorChoices" aria-label="Choose a Debriefing Facilitator"></div>
+            <div class="actions">
+              <button id="uploadVrReport" class="primary">Upload VR Experience Report (.docx)</button>
+              <button id="startDebrief" class="success" disabled>Start Debriefing</button>
+            </div>
+            <div id="vrReportStatus" class="panel muted resultPanel">No VR report uploaded.</div>
+          </div>
+          <div id="debriefBox" class="chat hidden">
+            <div class="chatHeader interviewHeader">
+              <div class="chatIdentity selectedInstructorIdentity">
+                <button id="changeDebriefInstructorAvatar" class="instructorAvatarButton" type="button" aria-label="Change Debriefing Facilitator">
+                  <img id="selectedDebriefInstructorImage" class="instructorHeaderImage" src="assets/instructors/jake-miller.svg" alt="Portrait of selected debriefing facilitator" />
+                  <span id="selectedDebriefInstructorAvatar" class="avatar fallbackInstructorAvatar">JM</span>
+                </button>
+                <div>
+                  <h3 id="selectedDebriefInstructorName">Jake Miller</h3>
+                  <p id="selectedDebriefInstructorSubtitle">Debriefing Facilitator | Jake, Tampa, Florida instructor</p>
+                </div>
+              </div>
+              <div class="voiceControls" aria-label="Debriefing voice controls">
+                <div id="debriefVoiceWaitIndicator" class="voiceWaitIndicator hidden" aria-live="polite">
+                  <span class="voiceSpinner" aria-hidden="true"></span>
+                  <span class="voiceWaitText">Preparing voice...</span>
+                </div>
+                <button id="toggleDebriefVoiceMode" class="secondary" type="button">Enable Voice Debriefing</button>
+                <button id="muteDebriefFacilitator" class="secondary hidden" type="button">Mute Facilitator</button>
+              </div>
+            </div>
+            <div id="debriefLog"></div>
+            <div class="chatComposer">
+              <textarea id="debriefAnswerBox" placeholder="Type your reflection here, or record and transcribe a voice reflection..."></textarea>
+              <div class="actions">
+                <button id="submitDebriefAnswer" class="primary">Submit Reflection</button>
+                <button id="debriefVoiceAnswer" class="secondary micButton" type="button" aria-label="Record voice reflection" title="Record voice reflection"><span aria-hidden="true" class="micIcon">🎙️</span><span class="srOnly">Record voice reflection</span></button>
+              </div>
+              <p id="debriefVoiceStatus" class="hint voiceStatus">Voice debriefing is optional. Press the microphone once, speak your reflection, and the app will transcribe and submit automatically.</p>
+            </div>
+          </div>
+          <div id="debriefComplete" class="panel successPanel hidden">
+            <h3>Debriefing Complete</h3>
+            <p>Thank you for completing the debriefing. You have successfully completed the Working at Height Learning Track.</p>
+            <button id="exportDebrief" class="primary">Export Debriefing Report</button>
+            <button id="continueCertificate" class="success" disabled>Continue to Certificate</button>
+          </div>
+        </section>
+
+        <section id="tab6" class="tab">
+          <div class="pageTitle">
+            <p class="eyebrow">Step 6</p>
+            <h2>Certificate</h2>
+            <p>Review the certificate on screen. Then download a professional certificate of completion for your records.</p>
+          </div>
+          <div class="certificateFrame" aria-label="Certificate preview">
+            <div class="certificateInner">
+              <p class="certSmall">Certificate of Completion</p>
+              <h3>Working at Height Learning Track</h3>
+              <p class="certSub">NR-35 Weather and Safety Focus</p>
+              <div class="certDivider"></div>
+              <p class="certStatement">This certifies that</p>
+              <p id="certStudentName" class="certName">Learner Name</p>
+              <p class="certStatement">has successfully completed the required learning track activities, including SmartChats learning, adaptive interview, adaptive quiz, VR experience report review, and guided debriefing.</p>
+              <div class="certDetails">
+                <p><strong>Email</strong><span id="certEmail">Not available</span></p>
+                <p><strong>Completion Date</strong><span id="certDate">Not available</span></p>
+                <p><strong>SmartChats Level</strong><span id="certSmart">Not available</span></p>
+                <p><strong>Interview Level</strong><span id="certInterview">Not available</span></p>
+                <p><strong>Quiz Level</strong><span id="certQuiz">Not available</span></p>
+                <p><strong>VR Expertise Level</strong><span id="certVR">Not available</span></p>
+                <p class="overallRow"><strong>Overall Readiness</strong><span id="certOverallLevel">Not available</span></p>
+              </div>
+              <div class="certificateReadinessBlock">
+                <p>Overall Readiness Classification</p>
+                <div id="certOverallBadge" class="readinessBadge basic">Basic</div>
+                <p id="certificateReadinessMessage">Additional study and practice may be recommended based on your overall readiness classification.</p>
+              </div>
+              <div class="certFooter">
+                <div><span></span><p>Program Facilitator</p></div>
+                <div class="certificateSeal">✓</div>
+                <div><span></span><p>Learning Track Record</p></div>
+              </div>
+            </div>
+          </div>
+          <div class="actions certificateActions">
+            <button id="downloadCertificate" class="primary">Download Certificate</button>
+            <button id="retakeProgram" class="secondary hidden">Retake Program</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script src="../node_modules/papaparse/papaparse.min.js"></script>
+  <script src="renderer.js"></script>
+
+  <div id="instructorModal" class="modalOverlay hidden" role="dialog" aria-modal="true" aria-labelledby="instructorModalTitle">
+    <div class="modalCard instructorModalCard">
+      <div class="modalHeader">
+        <div>
+          <p class="eyebrow">Interview Persona</p>
+          <h2 id="instructorModalTitle">Choose your Senior Safety Instructor</h2>
+          <p class="hint">Switching instructors updates the avatar, voice, and future interview style. If you switch mid-question, the current prompt is rewritten in the new instructor's style.</p>
+        </div>
+        <button id="closeInstructorModal" class="secondary modalCloseButton" type="button" aria-label="Close instructor selection">×</button>
+      </div>
+      <div id="instructorModalChoices" class="instructorChoices modalInstructorChoices" aria-label="Choose a Senior Safety Instructor"></div>
+    </div>
+  </div>
+
+</body>
+</html>

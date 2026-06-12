@@ -1,0 +1,6 @@
+{
+  "apiEndpoint": "https://tech-frontiers-senai-cimatec-openai-proxy.alexandre-g-siqueira.workers.dev/",
+  "apiMode": "cloudflareMessagesProxy",
+  "useLocalFallbackWhenApiFails": true,
+  "maxTokens": 1200
+}

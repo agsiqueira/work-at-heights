@@ -1,0 +1,40 @@
+{
+  "name": "working-at-height-learning-track-platform",
+  "version": "0.7.0",
+  "description": "Working at Height Learning Track Platform with Debriefing and Certificate tabs",
+  "main": "src/main.js",
+  "author": "Alexandre Gomes de Siqueira",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64"
+  },
+  "dependencies": {
+    "docx": "^8.5.0",
+    "electron-store": "^8.2.0",
+    "papaparse": "^5.4.1",
+    "mammoth": "^1.8.0"
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "edu.uf.workingatheights",
+    "productName": "Working at Height Learning Track",
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "data/**/*",
+      "docs/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  }
+}

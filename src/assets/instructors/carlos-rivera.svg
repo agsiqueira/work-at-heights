@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+<title id="title">Carlos Rivera</title><desc id="desc">Cartoon portrait of an older Latino male senior safety instructor from Miami.</desc>
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0f5ff"/><stop offset="1" stop-color="#e5edf8"/></linearGradient><filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="12" stdDeviation="10" flood-color="#25364d" flood-opacity=".18"/></filter></defs>
+<circle cx="256" cy="256" r="244" fill="url(#bg)"/>
+<ellipse cx="256" cy="456" rx="171" ry="39" fill="#b4c4d9" opacity=".45"/>
+<g filter="url(#shadow)">
+  <path d="M109 445c16-74 78-122 147-122s131 48 147 122H109z" fill="#6b6258"/>
+  <path d="M172 366c28 25 139 25 168 0l23 79H149l23-79z" fill="#5c534b"/>
+  <path d="M207 321c3 34 26 57 49 57s46-23 49-57v-33h-98v33z" fill="#d59872"/>
+  <path d="M150 210c-19 2-26 22-19 43 7 20 23 30 38 24l-19-67z" fill="#d59872"/>
+  <path d="M362 210c19 2 26 22 19 43-7 20-23 30-38 24l19-67z" fill="#d59872"/>
+  <path d="M160 202c0-79 40-130 96-130s96 51 96 130c0 91-40 151-96 151s-96-60-96-151z" fill="#dfaa82"/>
+  <path d="M187 204c17-14 48-14 65 1" fill="none" stroke="#3b241d" stroke-width="10" stroke-linecap="round"/>
+  <path d="M269 205c17-15 48-15 65-1" fill="none" stroke="#3b241d" stroke-width="10" stroke-linecap="round"/>
+  <ellipse cx="219" cy="230" rx="8" ry="11" fill="#2c1c19"/>
+  <ellipse cx="296" cy="230" rx="8" ry="11" fill="#2c1c19"/>
+  <path d="M256 236c-6 24-13 37-4 43 7 5 19 2 23-3" fill="none" stroke="#c68160" stroke-width="7" stroke-linecap="round"/>
+  <path d="M214 293c24 27 64 27 87 0" fill="#fff"/>
+  <path d="M214 293c24 27 64 27 87 0" fill="none" stroke="#8e4d42" stroke-width="8" stroke-linecap="round"/>
+  <path d="M199 316c27 25 87 25 114 0" fill="none" stroke="#4c2a22" stroke-width="16" stroke-linecap="round"/>
+  <path d="M190 318c-10-21-9-45 3-64" fill="none" stroke="#4c2a22" stroke-width="13" stroke-linecap="round"/>
+  <path d="M322 318c10-21 9-45-3-64" fill="none" stroke="#4c2a22" stroke-width="13" stroke-linecap="round"/>
+  <path d="M159 197c-7-67 24-120 82-132 36-8 84 3 108 40 24 36 17 79 4 100-35-15-62-42-77-78-31 31-75 48-117 70z" fill="#5b392d"/>
+  <path d="M180 104c39-31 83-40 125-16" fill="none" stroke="#7b5142" stroke-width="14" stroke-linecap="round" opacity=".8"/>
+  <path d="M203 75c18-16 57-21 84-9" fill="none" stroke="#a58d80" stroke-width="10" stroke-linecap="round" opacity=".9"/>
+  <path d="M172 445V356h47l37 54 38-54h47v89H172z" fill="#6b6258"/>
+  <path d="M220 356h72v89h-72z" fill="#ffffff"/>
+  <path d="M231 356l25 54 25-54" fill="#a7d8f2"/>
+  <path d="M172 356l84 54 85-54" fill="none" stroke="#514940" stroke-width="9" stroke-linejoin="round"/>
+</g>
+</svg>
