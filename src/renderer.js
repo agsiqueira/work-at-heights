@@ -783,7 +783,7 @@ function setTab(tab) {
   document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
   $(`tab${tab}`).classList.add('active');
   document.querySelectorAll('.tabs button').forEach(btn => btn.classList.toggle('active', Number(btn.dataset.tab) === tab));
-  if (tab === 6) updateCertificatePreview();
+  if (tab === 7) updateCertificatePreview();
   updateStatus();
   saveSession();
 }
@@ -899,9 +899,10 @@ function getFirstUnfinishedTab(saved = state) {
   if (!saved.smartchatsCompleted) return 2;
   if (!saved.interviewCompleted) return 3;
   if (!saved.quizCompleted) return 4;
-  if (!saved.debriefingCompleted) return 5;
-  if (!saved.certificateDownloaded) return 6;
-  return 6;
+  if (!saved.vrCompleted) return 5;
+  if (!saved.debriefingCompleted) return 6;
+  if (!saved.certificateDownloaded) return 7;
+  return 7;
 }
 
 function resetIncompleteWorkFromTab(tab) {
@@ -926,10 +927,18 @@ function resetIncompleteWorkFromTab(tab) {
   if (tab <= 5) {
     state.vrCompleted = false;
     state.vrExpertiseLevel = null;
-    state.debriefingCompleted = false;
-    state.debriefing = { vrReportFileName: '', vrReportText: '', vrSummary: '', history: [], turn: 0, followUpAsked: false, summary: '' };
+    state.debriefing.vrReportFileName = '';
+    state.debriefing.vrReportText = '';
+    state.debriefing.vrSummary = '';
   }
   if (tab <= 6) {
+    state.debriefingCompleted = false;
+    state.debriefing.history = [];
+    state.debriefing.turn = 0;
+    state.debriefing.followUpAsked = false;
+    state.debriefing.summary = '';
+  }
+  if (tab <= 7) {
     state.certificateDownloaded = false;
   }
 }
@@ -984,7 +993,7 @@ function rebuildInterfaceFromState(resumeTab = getFirstUnfinishedTab(state)) {
   if ($('quizSummaryText') && state.quizCompleted) $('quizSummaryText').textContent = `${state.quiz.summary || 'Quiz completed.'} ${state.quiz.vrMessage || ''}`.trim();
   if ($('quizFeedback')) $('quizFeedback').classList.add('hidden');
   if ($('quizOptions')) $('quizOptions').replaceChildren();
-  if ($('unlockDebrief')) $('unlockDebrief').disabled = !state.quizCompleted;
+  if ($('unlockVrAnalysis')) $('unlockVrAnalysis').disabled = !state.quizCompleted;
 
   if ($('debriefIntro')) $('debriefIntro').classList.toggle('hidden', state.debriefingCompleted);
   if ($('debriefBox')) $('debriefBox').classList.add('hidden');
@@ -996,6 +1005,7 @@ function rebuildInterfaceFromState(resumeTab = getFirstUnfinishedTab(state)) {
       ? `<p><strong>Uploaded:</strong> ${state.debriefing.vrReportFileName || 'VR report'}</p><p><strong>VR Expertise Level:</strong> ${state.vrExpertiseLevel || 'Not identified'}</p><p>${state.debriefing.vrSummary || 'VR report analyzed.'}</p>`
       : 'No VR report uploaded.';
   }
+  if ($('continueDebriefing')) $('continueDebriefing').disabled = !state.vrCompleted;
   if ($('startDebrief')) $('startDebrief').disabled = !state.vrCompleted;
   if ($('continueCertificate')) $('continueCertificate').disabled = !state.debriefingCompleted;
 
@@ -1014,7 +1024,7 @@ function checkForSavedSessionAfterEmailEntry() {
   const resumeTab = getFirstUnfinishedTab(saved);
   if (resumeTab <= 1 && !saved.orientationCompleted) return;
   promptedSessionEmails.add(email);
-  const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'Debriefing', 6: 'Certificate' };
+  const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'VR Experience Analysis', 6: 'Debriefing', 7: 'Certificate' };
   const savedName = saved.studentName ? ` for ${saved.studentName}` : '';
   const shouldContinue = window.confirm(`A previous learning track session was found${savedName}.\n\nContinue from Step ${resumeTab}: ${stepLabels[resumeTab]}?\n\nChoose OK to continue, or Cancel to start over.`);
   if (shouldContinue) {
@@ -1082,7 +1092,7 @@ function resetProgramForRetake() {
   if ($('quizComplete')) $('quizComplete').classList.add('hidden');
   if ($('quizFeedback')) $('quizFeedback').classList.add('hidden');
   if ($('quizOptions')) $('quizOptions').replaceChildren();
-  if ($('unlockDebrief')) $('unlockDebrief').disabled = true;
+  if ($('unlockVrAnalysis')) $('unlockVrAnalysis').disabled = true;
 
   if ($('debriefIntro')) $('debriefIntro').classList.remove('hidden');
   if ($('debriefBox')) $('debriefBox').classList.add('hidden');
@@ -1090,6 +1100,7 @@ function resetProgramForRetake() {
   if ($('debriefLog')) $('debriefLog').innerHTML = '';
   if ($('debriefAnswerBox')) $('debriefAnswerBox').value = '';
   if ($('vrReportStatus')) $('vrReportStatus').innerHTML = 'No VR report uploaded.';
+  if ($('continueDebriefing')) $('continueDebriefing').disabled = true;
   if ($('startDebrief')) $('startDebrief').disabled = true;
   if ($('continueCertificate')) $('continueCertificate').disabled = true;
 
@@ -1110,7 +1121,7 @@ function updateStatus() {
   $('statusVR').textContent = state.vrCompleted ? (state.vrExpertiseLevel ? `Completed (${state.vrExpertiseLevel})` : 'Completed') : 'Not completed';
   $('statusDebriefing').textContent = state.debriefingCompleted ? 'Completed' : 'Not completed';
   $('statusCertificate').textContent = state.certificateDownloaded ? 'Downloaded' : 'Not downloaded';
-  const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'Debriefing', 6: 'Certificate' };
+  const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'VR Experience Analysis', 6: 'Debriefing', 7: 'Certificate' };
   $('statusProgress').textContent = stepLabels[state.currentTab] || `Step ${state.currentTab}`;
 }
 function refreshTab1() {
@@ -1641,6 +1652,23 @@ async function summarizeVrReport() {
   }
 }
 
+async function analyzeVrReport() {
+  const result = await window.appApi.selectVrReport();
+  if (result.canceled) return;
+  state.debriefing.vrReportFileName = result.fileName;
+  state.debriefing.vrReportText = result.text || '';
+  $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p>Reading and summarizing VR report...</p>`;
+  if ($('continueDebriefing')) $('continueDebriefing').disabled = true;
+  if ($('startDebrief')) $('startDebrief').disabled = true;
+  await summarizeVrReport();
+  state.vrCompleted = true;
+  $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p><strong>VR Expertise Level:</strong> ${state.vrExpertiseLevel}</p><p>${state.debriefing.vrSummary}</p>`;
+  if ($('continueDebriefing')) $('continueDebriefing').disabled = false;
+  if ($('startDebrief')) $('startDebrief').disabled = false;
+  updateStatus();
+  saveSession();
+}
+
 function buildDebriefingContext() {
   return {
     studentName: state.studentName,
@@ -1827,25 +1855,14 @@ ${makeSegue(null, q)}`);
   $('startQuiz').addEventListener('click', startQuizAdaptive);
   $('submitQuizAnswer').addEventListener('click', submitQuizAnswer);
   $('nextQuizQuestion').addEventListener('click', continueQuiz);
-  $('exportQuiz').addEventListener('click', async () => { const r = await window.appApi.saveQuizReport(state); if (!r.canceled) { $('unlockDebrief').disabled = false; saveSession(); alert(`Quiz report saved to ${r.filePath}`); } });
-  $('unlockDebrief').addEventListener('click', () => { unlock(5); setTab(5); saveSession(); });
-  $('uploadVrReport').addEventListener('click', async () => {
-    const result = await window.appApi.selectVrReport();
-    if (result.canceled) return;
-    state.debriefing.vrReportFileName = result.fileName;
-    state.debriefing.vrReportText = result.text || '';
-    $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p>Reading and summarizing VR report...</p>`;
-    await summarizeVrReport();
-    state.vrCompleted = true;
-    $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p><strong>VR Expertise Level:</strong> ${state.vrExpertiseLevel}</p><p>${state.debriefing.vrSummary}</p>`;
-    $('startDebrief').disabled = false;
-    updateStatus();
-    saveSession();
-  });
+  $('exportQuiz').addEventListener('click', async () => { const r = await window.appApi.saveQuizReport(state); if (!r.canceled) { $('unlockVrAnalysis').disabled = false; saveSession(); alert(`Quiz report saved to ${r.filePath}`); } });
+  $('unlockVrAnalysis').addEventListener('click', () => { unlock(5); setTab(5); saveSession(); });
+  $('uploadVrReport').addEventListener('click', analyzeVrReport);
+  $('continueDebriefing').addEventListener('click', () => { unlock(6); setTab(6); saveSession(); });
   $('startDebrief').addEventListener('click', startDebriefing);
   $('submitDebriefAnswer').addEventListener('click', submitDebriefingAnswer);
   $('exportDebrief').addEventListener('click', async () => { const r = await window.appApi.saveDebriefingReport(state); if (!r.canceled) { $('continueCertificate').disabled = false; saveSession(); alert(`Debriefing report saved to ${r.filePath}`); } });
-  $('continueCertificate').addEventListener('click', () => { unlock(6); updateCertificatePreview(); setTab(6); saveSession(); });
+  $('continueCertificate').addEventListener('click', () => { unlock(7); updateCertificatePreview(); setTab(7); saveSession(); });
   $('downloadCertificate').addEventListener('click', async () => { updateCertificatePreview(); const r = await window.appApi.saveCertificate(state); if (!r.canceled) { state.certificateDownloaded = true; updateStatus(); saveSession(); alert(`Certificate saved to ${r.filePath}`); } });
 }
 init();
