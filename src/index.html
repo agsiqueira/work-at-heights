@@ -92,35 +92,52 @@
         </nav>
 
         <section id="tab1" class="tab active">
-          <div class="pageTitle">
+          <div class="pageTitle orientationTitle">
             <p class="eyebrow">Step 1</p>
             <h2>Orientation</h2>
-            <p>Enter your details, open SmartChats, review the modules, and download the NR-35 ebook.</p>
+            <p>Set up your learner profile, complete SmartChats, and keep the safety ebook nearby if you want extra reference material.</p>
           </div>
 
-          <div class="gridTwo">
-            <div class="panel featurePanel">
-              <h3>Set Up Your Track</h3>
-              <p>Your name appears on reports and your certificate. Your email matches your SmartChats export.</p>
-              <label>Full Name <input id="studentName" autocomplete="name" placeholder="Type your full name" /></label>
-              <label>Email Address <input id="studentEmail" type="email" autocomplete="email" placeholder="name@example.com" /></label>
-              <p class="hint">Enter a valid name and email to continue.</p>
-              <div class="actions">
-                <button id="openSmartChats" class="primary" disabled>Open SmartChats</button>
-                <button id="downloadEbook" class="secondary">Download NR-35 Ebook</button>
+          <div class="panel orientationCard">
+            <section class="orientationSection learnerDetails">
+              <div class="orientationSectionHeader">
+                <span class="orientationStepBadge">1</span>
+                <div>
+                  <h3>Learner Details</h3>
+                  <p>Your name appears on reports and your certificate.</p>
+                </div>
               </div>
-              <button id="completeLearning" class="success" disabled>Learning Modules Complete</button>
-            </div>
+              <div class="orientationFields">
+                <label>Full Name <input id="studentName" autocomplete="name" placeholder="Type your full name" /></label>
+                <label>Email Address <input id="studentEmail" type="email" autocomplete="email" placeholder="name@example.com" /></label>
+              </div>
+              <p class="hint">Enter a valid name and email to activate SmartChats.</p>
+            </section>
 
-            <div class="panel infoPanel">
-              <h3>Before You Continue</h3>
-              <ol class="checklist">
-                <li>Watch the required SmartChats module videos.</li>
-                <li>Ask questions about unclear concepts.</li>
-                <li>Export your SmartChats analytics as a CSV file.</li>
-                <li>Return here for the adaptive interview and quiz.</li>
-              </ol>
-            </div>
+            <section class="orientationSection smartChatsSection">
+              <div class="orientationSectionHeader">
+                <span class="orientationStepBadge">2</span>
+                <div>
+                  <h3>SmartChats Learning</h3>
+                  <p>Open SmartChats, complete the learning modules, and ask questions whenever you need clarification.</p>
+                </div>
+              </div>
+              <div class="orientationActions">
+                <button id="openSmartChats" class="primary" disabled>Open SmartChats</button>
+                <button id="completeLearning" class="primary" disabled>I Completed the SmartChats Modules</button>
+              </div>
+            </section>
+
+            <section class="orientationSection referenceSection">
+              <div class="orientationSectionHeader">
+                <span class="orientationStepBadge optionalBadge">Optional</span>
+                <div>
+                  <h3>Reference Material</h3>
+                  <p>Download the Working at Height safety ebook if you'd like additional reference material.</p>
+                </div>
+              </div>
+              <button id="downloadEbook" class="secondary">Download Safety Ebook</button>
+            </section>
           </div>
         </section>
 

@@ -228,6 +228,98 @@ button:disabled { opacity:.48; cursor:not-allowed; transform:none; box-shadow:no
   grid-template-columns:minmax(0, 1.4fr) minmax(260px, .8fr);
   gap:20px;
 }
+.orientationTitle {
+  max-width:820px;
+  padding-bottom:22px;
+}
+.orientationTitle h2 {
+  font-size:38px;
+}
+.orientationCard {
+  max-width:980px;
+  display:grid;
+  gap:0;
+  padding:0;
+  overflow:hidden;
+  border:1px solid var(--line);
+  background:#ffffff;
+}
+.orientationSection {
+  display:grid;
+  gap:18px;
+  padding:26px 28px;
+  border-bottom:1px solid var(--line);
+}
+.orientationSection:last-child {
+  border-bottom:0;
+}
+.orientationSectionHeader {
+  display:grid;
+  grid-template-columns:auto minmax(0, 1fr);
+  gap:14px;
+  align-items:start;
+}
+.orientationSectionHeader h3 {
+  margin:0 0 4px;
+  font-size:21px;
+}
+.orientationSectionHeader p {
+  margin:0;
+  color:var(--muted);
+  line-height:1.55;
+}
+.orientationStepBadge {
+  display:inline-grid;
+  place-items:center;
+  min-width:42px;
+  height:42px;
+  padding:0 10px;
+  border-radius:14px;
+  background:var(--accent-soft);
+  color:var(--accent-dark);
+  border:1px solid #dbeafe;
+  font-weight:900;
+  font-size:14px;
+}
+.orientationFields {
+  display:grid;
+  grid-template-columns:repeat(2, minmax(0, 1fr));
+  gap:16px;
+}
+.orientationFields label {
+  margin:0;
+}
+.smartChatsSection {
+  background:linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+}
+.orientationActions {
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.orientationActions button {
+  min-width:220px;
+}
+.referenceSection {
+  background:#f8fafc;
+}
+.referenceSection .orientationSectionHeader h3 {
+  font-size:19px;
+}
+.referenceSection .orientationSectionHeader p {
+  font-size:14px;
+}
+.referenceSection button {
+  justify-self:start;
+}
+.optionalBadge {
+  min-width:78px;
+  background:#ffffff;
+  color:var(--muted);
+  border-color:var(--line-strong);
+  font-size:12px;
+}
 .panel { padding:24px; }
 .panel h3 { margin:0 0 10px; font-size:20px; letter-spacing:0; line-height:1.25; }
 .panel p { line-height:1.6; color:#475569; }
@@ -510,6 +602,11 @@ input[type="file"] {
   .content, .status, .panel { border-radius:18px; }
   .tabs { grid-template-columns:1fr; }
   .pageTitle h2 { font-size:26px; }
+  .orientationTitle h2 { font-size:32px; }
+  .orientationSection { padding:22px; }
+  .orientationFields { grid-template-columns:1fr; }
+  .orientationActions { flex-direction:column; align-items:stretch; }
+  .orientationActions button { width:100%; min-width:0; }
   .msg { max-width:96%; }
 }
 
