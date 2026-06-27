@@ -26,6 +26,7 @@ const safetyInstructors = {
     image: 'assets/instructors/jake-miller.svg',
     voice: 'cedar',
     description: 'A senior instructor from Tampa with a fast, confident field-coach style. He is energetic, practical, and direct without sounding formal.',
+    displayDescription: 'Fast, practical field coach.',
     systemStyle: 'Use clear modern English with a fast Tampa, Florida field-coach rhythm. Be energetic, approachable, practical, confident, and direct. Use coaching phrases such as "good catch", "walk me through that", "that is exactly what crews miss", and "that is what we see in the field" when natural. Do not sound like a lecturer. Keep safety reasoning precise and grounded in the provided material.',
     ttsInstructions: 'Speak as a fast, energetic safety trainer from Tampa, Florida. Use clear modern English, confident field-coach delivery, practical emphasis, and an approachable but decisive rhythm. Do not exaggerate an accent; make the character distinct through pace, confidence, and coaching cadence.'
   },
@@ -39,6 +40,7 @@ const safetyInstructors = {
     image: 'assets/instructors/emily-carter.svg',
     voice: 'sage',
     description: 'A senior instructor from Denver with a warm mentor style. She is calm, articulate, supportive, and focused on helping students explain their reasoning.',
+    displayDescription: 'Calm, supportive mentor.',
     systemStyle: 'Use clear western English shaped by a Denver, Colorado mentor style. Be warm, articulate, supportive, calm, and practical. Use coaching phrases such as "you are on the right track", "tell me a little more about your reasoning", "let us think through that together", and "I want to understand how you are assessing the hazard" when natural. Keep the tone friendly while still expert and safety-focused.',
     ttsInstructions: 'Speak as a professional female safety trainer from Denver, Colorado. Use warm mentor-like pacing, highly articulate speech, supportive coaching intonation, clear pronunciation, and calm confidence. Do not force a heavy accent; make her distinct through clarity, warmth, and patient cadence.'
   },
@@ -52,6 +54,7 @@ const safetyInstructors = {
     image: 'assets/instructors/carlos-rivera.svg',
     voice: 'onyx',
     description: 'A senior instructor from Miami with a formal, demanding supervisor style. He is precise, disciplined, direct, and expects students to justify every safety decision.',
+    displayDescription: 'Precise, disciplined supervisor.',
     systemStyle: 'Use mostly English with a natural Miami bilingual rhythm. Use occasional Spanish words such as "mira", "exacto", "vamos", "compadre", or "tranquilo" when natural, but keep the safety content clear. Be formal, demanding, deliberate, and direct. Hold students accountable without being rude. Ask for precise safety reasoning before accepting an answer. Sound like a strict senior supervisor who expects discipline before anyone leaves the ground.',
     ttsInstructions: 'Speak as an older male senior safety instructor from Miami, Florida. Use an authoritative, deep, firm, professional voice with deliberate pacing and subtle Miami bilingual rhythm. Include light Spanish flavor only through cadence and occasional phrasing. Do not sound feminine. Do not overdo the accent. Sound demanding but professional.'
   },
@@ -65,6 +68,7 @@ const safetyInstructors = {
     image: 'assets/instructors/beatrice-johnson.svg',
     voice: 'shimmer',
     description: 'A highly experienced instructor from Birmingham with a warm Deep South teaching style. She is memorable, practical, caring, and firm about safe decisions.',
+    displayDescription: 'Warm, experienced field trainer.',
     systemStyle: 'Use clear English with a natural Deep South Alabama flavor. Use regional phrasing such as "well now", "now listen", "honey", "let me tell you", "I have seen folks make that mistake before", and "you do not want to be halfway up there wishing you had checked first" sparingly and naturally. Be warm but firm, practical, and serious about safety. Keep wording understandable. Sound like a respected field trainer with decades of experience.',
     ttsInstructions: 'Speak as an experienced senior safety instructor from Birmingham, Alabama. Use warm, confident, authentic Southern cadence with practical field authority and a slightly slower storytelling rhythm. Do not exaggerate the accent. Focus on sounding natural, conversational, reassuring, and clear.'
   }
@@ -142,7 +146,7 @@ function renderInstructorCards() {
         <span class="instructorCardBody">
           <strong>${instructor.name}</strong>
           <em>${instructor.origin}</em>
-          <span>${instructor.description}</span>
+          <span>${instructor.displayDescription || instructor.description}</span>
         </span>
       `;
       button.addEventListener('click', () => {
@@ -475,10 +479,10 @@ function setupVoiceFeatures() {
   voiceState.supportedNaturalSpeech = Boolean(window.appApi && window.appApi.synthesizeSpeech);
   voiceState.supportedRecording = Boolean(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder && window.appApi && window.appApi.transcribeAudio);
   if (!voiceState.supportedRecording) {
-    updateVoiceStatus('Voice recording is not available in this build. Text chat and typed reflection remain available.');
+    updateVoiceStatus('Voice recording is unavailable. Text entry remains available.');
   } else {
-    if ($('voiceStatus')) $('voiceStatus').textContent = 'Voice interview is optional. Natural interviewer voice is enabled through the voice Worker. Choose your Senior Safety Instructor before starting. Press the microphone once, answer aloud, and the app will transcribe and submit automatically.';
-    if ($('debriefVoiceStatus')) $('debriefVoiceStatus').textContent = 'Voice debriefing is optional. Natural facilitator voice is enabled through the voice Worker. Press the microphone once, speak your reflection, and the app will transcribe and submit automatically.';
+    if ($('voiceStatus')) $('voiceStatus').textContent = 'Voice is optional. Choose an instructor, press the microphone, and answer aloud.';
+    if ($('debriefVoiceStatus')) $('debriefVoiceStatus').textContent = 'Voice is optional. Press the microphone to record and submit your reflection.';
   }
   refreshVoiceControls();
 }
@@ -486,7 +490,7 @@ function setupVoiceFeatures() {
 function toggleVoiceMode() {
   voiceState.mode = 'interview';
   if (!voiceState.supportedNaturalSpeech && !voiceState.supportedSpeech) {
-    updateVoiceStatus('Voice playback is not available in this Electron/browser build. Text chat remains available.');
+    updateVoiceStatus('Voice playback is unavailable. Text chat remains available.');
     return;
   }
   voiceState.enabled = !voiceState.enabled;
@@ -495,8 +499,8 @@ function toggleVoiceMode() {
     stopVoiceRecording();
   }
   updateVoiceStatus(voiceState.enabled
-    ? 'Voice interview enabled. The current question will be read aloud. Press the microphone once to answer by voice.'
-    : 'Voice interview disabled. Text chat remains available.');
+    ? 'Voice enabled. Press the microphone to answer aloud.'
+    : 'Voice disabled. Text chat remains available.');
   refreshVoiceControls();
   if (voiceState.enabled) {
     const currentPrompt = getCurrentInterviewerText();
@@ -1138,7 +1142,7 @@ function classifySmartChats(rows) {
   const email = state.studentEmail.toLowerCase();
   const matched = rows.filter(r => String(r.studentEmail || r.email || '').trim().toLowerCase() === email);
   const qs = matched.map(r => String(r.question || r.Question || r.message || '').toLowerCase()).filter(Boolean);
-  if (qs.length === 0) return { count: 0, level: 'Expert', summary: 'No questions found for this email. Following the project rule, this is classified as Expert because the learner may already possess mastery.' };
+  if (qs.length === 0) return { count: 0, level: 'Expert', summary: 'No questions found for this email. Classified as Expert by project rule.' };
   const advancedWords = ['why','how','scenario','suspend','risk assessment','external influence','restrictive','emergency','supervisor','decision','continue','weather'];
   const introWords = ['what is','what are','tell me','module about','define','meaning'];
   let advanced = 0, intro = 0;
@@ -1146,7 +1150,7 @@ function classifySmartChats(rows) {
   let level = 'Intermediate';
   if (advanced >= Math.max(2, qs.length * .45)) level = 'Expert';
   else if (intro >= qs.length * .6) level = 'Basic';
-  return { count: qs.length, level, summary: `Found ${qs.length} SmartChats question(s) for ${state.studentEmail}. Introductory patterns: ${intro}. Application/advanced safety reasoning patterns: ${advanced}. Classified as ${level}.` };
+  return { count: qs.length, level, summary: `${qs.length} SmartChats question(s) found. Introductory: ${intro}. Advanced safety reasoning: ${advanced}. Classified as ${level}.` };
 }
 
 function initialLevelFromSmartChats() {
@@ -1657,7 +1661,7 @@ async function analyzeVrReport() {
   if (result.canceled) return;
   state.debriefing.vrReportFileName = result.fileName;
   state.debriefing.vrReportText = result.text || '';
-  $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p>Reading and summarizing VR report...</p>`;
+  $('vrReportStatus').innerHTML = `<p><strong>Uploaded:</strong> ${result.fileName}</p><p>Analyzing VR experience...</p>`;
   if ($('continueDebriefing')) $('continueDebriefing').disabled = true;
   if ($('startDebrief')) $('startDebrief').disabled = true;
   await summarizeVrReport();

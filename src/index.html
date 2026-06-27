@@ -16,22 +16,22 @@
         </div>
         <p class="eyebrow">NR-35 Weather and Safety Focus</p>
         <h1>Working at Height Learning Track</h1>
-        <p class="welcomeLead">Welcome to a guided learning experience designed to help you review core NR-35 concepts, reflect on weather-related safety decisions, demonstrate readiness through an adaptive interview and quiz, and complete a final debriefing after the VR activity.</p>
+        <p class="welcomeLead">Review NR-35 concepts, complete adaptive checks, reflect on your VR experience, and finish with a certificate.</p>
         <div class="welcomeHighlights">
           <div>
             <strong>Learn</strong>
-            <span>Watch the module videos, review the ebook, and ask questions in SmartChats.</span>
+            <span>Watch the modules, review the ebook, and ask questions in SmartChats.</span>
           </div>
           <div>
             <strong>Demonstrate</strong>
-            <span>Complete an adaptive interview and quiz that respond to your level of understanding.</span>
+            <span>Complete an adaptive interview and quiz.</span>
           </div>
           <div>
             <strong>Reflect</strong>
-            <span>Connect the VR activity to the full learning track through a guided debriefing.</span>
+            <span>Connect the VR activity to a guided debriefing.</span>
           </div>
         </div>
-        <p class="welcomeNote">This program is part of the full Learning Track. Each step builds evidence of completion and prepares you for the final certificate.</p>
+        <p class="welcomeNote">Each step builds your completion record and prepares your final certificate.</p>
         <button id="beginTrack" class="primary largeButton">Enter Learning Track</button>
       </div>
     </div>
@@ -44,7 +44,7 @@
         <div>
           <p class="eyebrow">NR-35 Weather and Safety Focus</p>
           <h1>Working at Height Learning Track</h1>
-          <p class="heroCopy">A guided adaptive pathway through SmartChats, interview, quiz, VR reflection, and certification.</p>
+          <p class="heroCopy">SmartChats, interview, quiz, VR reflection, and certification.</p>
         </div>
       </div>
       <div class="heroBadge">Learning Track</div>
@@ -56,7 +56,7 @@
           <span class="statusIcon">✓</span>
           <div>
             <h2>Learner Status</h2>
-            <p>Track progress and readiness</p>
+            <p>Progress and readiness</p>
           </div>
         </div>
 
@@ -95,47 +95,56 @@
           <div class="pageTitle">
             <p class="eyebrow">Step 1</p>
             <h2>Orientation</h2>
-            <p>Enter your information to personalize the learning track. Then open SmartChats, watch the module videos, ask questions, and download the NR-35 ebook for review.</p>
+            <p>Enter your details, open SmartChats, review the modules, and download the NR-35 ebook.</p>
           </div>
 
           <div class="gridTwo">
             <div class="panel featurePanel">
-              <h3>Set up your learning track</h3>
-              <p>Your name will appear on reports and the certificate. Your email will be used to personalize the SmartChats link and match your exported interaction logs later.</p>
+              <h3>Set Up Your Track</h3>
+              <p>Your name appears on reports and your certificate. Your email matches your SmartChats export.</p>
               <label>Full Name <input id="studentName" autocomplete="name" placeholder="Type your full name" /></label>
               <label>Email Address <input id="studentEmail" type="email" autocomplete="email" placeholder="name@example.com" /></label>
-              <p class="hint">The SmartChats button becomes active after a valid name and email are entered.</p>
+              <p class="hint">Enter a valid name and email to continue.</p>
               <div class="actions">
                 <button id="openSmartChats" class="primary" disabled>Open SmartChats</button>
                 <button id="downloadEbook" class="secondary">Download NR-35 Ebook</button>
               </div>
-              <button id="completeLearning" class="success" disabled>I Completed the Learning Modules</button>
+              <button id="completeLearning" class="success" disabled>Learning Modules Complete</button>
             </div>
 
             <div class="panel infoPanel">
-              <h3>Before continuing</h3>
+              <h3>Before You Continue</h3>
               <ol class="checklist">
                 <li>Watch the required SmartChats module videos.</li>
-                <li>Ask questions about concepts that are unclear.</li>
-                <li>Export your SmartChats interaction analytics as a CSV file.</li>
-                <li>Return here to continue into the adaptive interview and quiz.</li>
+                <li>Ask questions about unclear concepts.</li>
+                <li>Export your SmartChats analytics as a CSV file.</li>
+                <li>Return here for the adaptive interview and quiz.</li>
               </ol>
             </div>
           </div>
         </section>
 
         <section id="tab2" class="tab">
-          <div class="pageTitle">
+          <div class="pageTitle analysisTitle">
             <p class="eyebrow">Step 2</p>
             <h2>SmartChats Analysis</h2>
-            <p>Upload the analytics CSV exported from SmartChats. The system will analyze only the records that match the email entered during Orientation.</p>
+            <p>Import the SmartChats CSV to estimate readiness and prepare the adaptive interview.</p>
           </div>
-          <div class="panel uploadPanel">
-            <h3>Upload SmartChats CSV</h3>
-            <p>This step estimates your starting readiness level based on the number and type of questions you asked during the video-based learning modules.</p>
-            <input type="file" id="smartCsv" accept=".csv" />
-            <div id="smartResults" class="panel muted resultPanel">No CSV loaded.</div>
-            <button id="completeSmart" class="primary" disabled>Continue to Interview</button>
+          <div class="panel uploadPanel analysisPanel">
+            <div class="analysisHeader">
+              <span class="analysisIcon" aria-hidden="true">CSV</span>
+              <div>
+                <h3>Import SmartChats</h3>
+                <p>Use the exported CSV for the email entered in Orientation.</p>
+              </div>
+            </div>
+            <div class="analysisImport">
+              <input type="file" id="smartCsv" accept=".csv" />
+            </div>
+            <div id="smartResults" class="panel muted resultPanel analysisResult">No CSV loaded.</div>
+            <div class="analysisActions">
+              <button id="completeSmart" class="primary" disabled>Continue to Interview</button>
+            </div>
           </div>
         </section>
 
@@ -143,13 +152,13 @@
           <div class="pageTitle">
             <p class="eyebrow">Step 3</p>
             <h2>Interview</h2>
-            <p class="subtitle">Conversational Safety Readiness Interview</p>
+            <p class="subtitle">Safety readiness conversation</p>
           </div>
           <div id="interviewIntro" class="panel featurePanel">
-            <h3>Choose your Senior Safety Instructor</h3>
-            <p>This is not a traditional quiz. During this conversation, the selected Instructor will ask you to explain safety-related decisions in your own words, adapt the difficulty based on your responses, and recommend relevant ebook chapters when additional review would be beneficial.</p>
+            <h3>Choose Your Instructor</h3>
+            <p>Your instructor will ask safety questions, adapt to your answers, and recommend ebook chapters when review is helpful.</p>
             <div id="instructorChoices" class="instructorChoices" aria-label="Choose a Senior Safety Instructor"></div>
-            <p class="hint">Select a portrait to choose the instructor voice, personality, and conversational style for the interview.</p>
+            <p class="hint">Select a portrait to choose the interview style and voice.</p>
             <button id="startInterview" class="primary">Start Interview</button>
           </div>
           <div id="interviewBox" class="chat hidden">
@@ -175,20 +184,28 @@
             </div>
             <div id="chatLog"></div>
             <div class="chatComposer">
-              <textarea id="answerBox" placeholder="Type your answer here, or record and transcribe a voice answer..."></textarea>
+              <textarea id="answerBox" placeholder="Type your answer or record a voice response..."></textarea>
               <div class="actions">
                 <button id="submitAnswer" class="primary">Submit Answer</button>
                 <button id="voiceAnswer" class="secondary micButton" type="button" aria-label="Record voice answer" title="Record voice answer"><span aria-hidden="true" class="micIcon">🎙️</span><span class="srOnly">Record voice answer</span></button>
                 <button id="skipAnswer" class="secondary">I Don't Know</button>
               </div>
-              <p id="voiceStatus" class="hint voiceStatus">Voice interview is optional. If voice capture stops, the text already captured remains in the box. Press Record Voice Answer again to add more, or continue typing.</p>
+              <p id="voiceStatus" class="hint voiceStatus">Voice is optional. You can record again or continue typing.</p>
             </div>
           </div>
           <div id="interviewComplete" class="panel successPanel hidden">
-            <h3>Interview Complete</h3>
-            <p>Export your interview report before continuing. The report includes your score, readiness level, feedback, and recommended review chapters.</p>
-            <button id="exportInterview" class="primary">Export Interview Report</button>
-            <button id="unlockQuiz" class="success" disabled>Continue to Quiz</button>
+            <div class="successHeader">
+              <span class="successMark" aria-hidden="true">✓</span>
+              <div>
+                <p class="successLabel">Step complete</p>
+                <h3>Interview Complete</h3>
+              </div>
+            </div>
+            <p>Export your interview report to save your score, readiness level, feedback, and review chapters.</p>
+            <div class="successActions">
+              <button id="exportInterview" class="primary">Export Interview Report</button>
+              <button id="unlockQuiz" class="success" disabled>Continue to Quiz</button>
+            </div>
           </div>
         </section>
 
@@ -196,13 +213,12 @@
           <div class="pageTitle">
             <p class="eyebrow">Step 4</p>
             <h2>Quiz</h2>
-            <p class="subtitle">Adaptive Readiness Assessment</p>
+            <p class="subtitle">Adaptive readiness check</p>
           </div>
           <div id="quizIntro" class="panel featurePanel">
-            <h3>Confirm readiness before VR</h3>
-            <p>The Readiness Quiz evaluates your understanding of the concepts covered throughout the program.</p>
-            <p>Questions are designed to assess your ability to recognize hazards, apply safe work practices, and make appropriate decisions in work-at-height situations.</p>
-            <p>Read each question carefully and select the best answer.</p>
+            <h3>Confirm Readiness</h3>
+            <p>The quiz checks your understanding before the VR activity.</p>
+            <p>Read each question carefully and choose the safest answer.</p>
             <button id="startQuiz" class="primary">Start Quiz</button>
           </div>
           <div id="quizBox" class="panel quizCard hidden">
@@ -220,27 +236,42 @@
             <div id="quizFeedback" class="panel muted resultPanel hidden"></div>
           </div>
           <div id="quizComplete" class="panel successPanel hidden">
-            <h3>Quiz Complete</h3>
+            <div class="successHeader">
+              <span class="successMark" aria-hidden="true">✓</span>
+              <div>
+                <p class="successLabel">Step complete</p>
+                <h3>Quiz Complete</h3>
+              </div>
+            </div>
             <p id="quizSummaryText"></p>
-            <button id="exportQuiz" class="primary">Export Quiz Report</button>
-            <button id="unlockVrAnalysis" class="success" disabled>Continue to VR Experience Analysis</button>
+            <div class="successActions">
+              <button id="exportQuiz" class="primary">Export Quiz Report</button>
+              <button id="unlockVrAnalysis" class="success" disabled>Continue to VR Experience Analysis</button>
+            </div>
           </div>
         </section>
 
         <section id="tab5" class="tab">
-          <div class="pageTitle">
+          <div class="pageTitle analysisTitle">
             <p class="eyebrow">Step 5</p>
             <h2>VR Experience Analysis</h2>
-            <p>Upload the VR Experience Report generated by the VR system. The system will analyze the learner's VR experience, identify the VR expertise level when available, and prepare the context for debriefing.</p>
+            <p>Import the VR Experience Report to summarize the learner's VR activity and prepare the debriefing.</p>
           </div>
-          <div class="panel uploadPanel">
-            <h3>Upload VR Experience Report</h3>
-            <p>This step uses the .docx report to summarize the VR experience before the guided reflection conversation begins.</p>
-            <div class="actions">
+          <div class="panel uploadPanel analysisPanel">
+            <div class="analysisHeader">
+              <span class="analysisIcon" aria-hidden="true">DOCX</span>
+              <div>
+                <h3>Import VR Experience</h3>
+                <p>Use the .docx report generated by the VR system.</p>
+              </div>
+            </div>
+            <div class="analysisImport">
               <button id="uploadVrReport" class="primary">Upload VR Experience Report (.docx)</button>
             </div>
-            <div id="vrReportStatus" class="panel muted resultPanel">No VR report uploaded.</div>
-            <button id="continueDebriefing" class="primary" disabled>Continue to Debriefing</button>
+            <div id="vrReportStatus" class="panel muted resultPanel analysisResult">No VR report uploaded.</div>
+            <div class="analysisActions">
+              <button id="continueDebriefing" class="primary" disabled>Continue to Debriefing</button>
+            </div>
           </div>
         </section>
 
@@ -248,13 +279,13 @@
           <div class="pageTitle">
             <p class="eyebrow">Step 6</p>
             <h2>Debriefing</h2>
-            <p class="subtitle">Reflective Learning Track Debriefing</p>
+            <p class="subtitle">Guided reflection</p>
           </div>
           <div id="debriefIntro" class="panel featurePanel">
-            <h3>Reflect on the full experience</h3>
-            <p>The VR report has been imported. Your facilitator will use it to guide a short reflection about the VR activity and the complete learning track.</p>
-            <h3>Choose your Debriefing Facilitator</h3>
-            <p class="hint">Use the same Senior Safety Instructor personas from the interview, including their conversational style, regional voice, and coaching approach.</p>
+            <h3>Reflect on the Experience</h3>
+            <p>Your facilitator will use the imported VR report to guide a short debriefing.</p>
+            <h3>Choose Your Facilitator</h3>
+            <p class="hint">Choose the instructor style and voice for your debriefing.</p>
             <div id="debriefInstructorChoices" class="instructorChoices" aria-label="Choose a Debriefing Facilitator"></div>
             <div class="actions">
               <button id="startDebrief" class="success" disabled>Start Debriefing</button>
@@ -283,19 +314,27 @@
             </div>
             <div id="debriefLog"></div>
             <div class="chatComposer">
-              <textarea id="debriefAnswerBox" placeholder="Type your reflection here, or record and transcribe a voice reflection..."></textarea>
+              <textarea id="debriefAnswerBox" placeholder="Type your reflection or record a voice response..."></textarea>
               <div class="actions">
                 <button id="submitDebriefAnswer" class="primary">Submit Reflection</button>
                 <button id="debriefVoiceAnswer" class="secondary micButton" type="button" aria-label="Record voice reflection" title="Record voice reflection"><span aria-hidden="true" class="micIcon">🎙️</span><span class="srOnly">Record voice reflection</span></button>
               </div>
-              <p id="debriefVoiceStatus" class="hint voiceStatus">Voice debriefing is optional. Press the microphone once, speak your reflection, and the app will transcribe and submit automatically.</p>
+              <p id="debriefVoiceStatus" class="hint voiceStatus">Voice is optional. Record once to transcribe and submit automatically.</p>
             </div>
           </div>
           <div id="debriefComplete" class="panel successPanel hidden">
-            <h3>Debriefing Complete</h3>
-            <p>Thank you for completing the debriefing. You have successfully completed the Working at Height Learning Track.</p>
-            <button id="exportDebrief" class="primary">Export Debriefing Report</button>
-            <button id="continueCertificate" class="success" disabled>Continue to Certificate</button>
+            <div class="successHeader">
+              <span class="successMark" aria-hidden="true">✓</span>
+              <div>
+                <p class="successLabel">Track complete</p>
+                <h3>Debriefing Complete</h3>
+              </div>
+            </div>
+            <p>Debriefing complete. Your certificate is ready.</p>
+            <div class="successActions">
+              <button id="exportDebrief" class="primary">Export Debriefing Report</button>
+              <button id="continueCertificate" class="success" disabled>Continue to Certificate</button>
+            </div>
           </div>
         </section>
 
@@ -303,7 +342,15 @@
           <div class="pageTitle">
             <p class="eyebrow">Step 7</p>
             <h2>Certificate</h2>
-            <p>Review the certificate on screen. Then download a professional certificate of completion for your records.</p>
+            <p>Review your certificate and download a copy for your records.</p>
+          </div>
+          <div class="certificateHero">
+            <span class="successMark certificateHeroMark" aria-hidden="true">✓</span>
+            <div>
+              <p class="successLabel">Learning track complete</p>
+              <h3>Certificate Ready</h3>
+              <p>Your completion record is ready to download.</p>
+            </div>
           </div>
           <div class="certificateFrame" aria-label="Certificate preview">
             <div class="certificateInner">
@@ -313,7 +360,7 @@
               <div class="certDivider"></div>
               <p class="certStatement">This certifies that</p>
               <p id="certStudentName" class="certName">Learner Name</p>
-              <p class="certStatement">has successfully completed the required learning track activities, including SmartChats learning, adaptive interview, adaptive quiz, VR experience report review, and guided debriefing.</p>
+              <p class="certStatement">has completed the required learning track activities: SmartChats, adaptive interview, adaptive quiz, VR experience review, and guided debriefing.</p>
               <div class="certDetails">
                 <p><strong>Email</strong><span id="certEmail">Not available</span></p>
                 <p><strong>Completion Date</strong><span id="certDate">Not available</span></p>
@@ -335,9 +382,15 @@
               </div>
             </div>
           </div>
-          <div class="actions certificateActions">
-            <button id="downloadCertificate" class="primary">Download Certificate</button>
-            <button id="retakeProgram" class="secondary hidden">Retake Program</button>
+          <div class="certificateActionPanel">
+            <div>
+              <h3>Save Your Certificate</h3>
+              <p>Download a copy for your records.</p>
+            </div>
+            <div class="actions certificateActions">
+              <button id="downloadCertificate" class="primary">Download Certificate</button>
+              <button id="retakeProgram" class="secondary hidden">Retake Program</button>
+            </div>
           </div>
         </section>
       </section>
