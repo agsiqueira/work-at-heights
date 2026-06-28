@@ -162,6 +162,19 @@ Create the Windows installer:
 npm run dist:win
 ```
 
+## Companion VR Application
+
+The immersive virtual reality subsystem is distributed independently from this repository to keep the source code repository lightweight and focused on the desktop orchestration platform.
+
+The latest VR application package can be downloaded from the following Google Drive folder:
+
+**Download:** :contentReference[oaicite:0]{index=0}
+
+The current VR application has been tested with:
+
+- Meta Quest 3
+- Meta Quest 3S
+
 ---
 
 ## Repository Structure
