@@ -3,36 +3,76 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Working at Height Learning Track</title>
+  <title>Working at Height Training Experience</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <section id="welcomePage" class="welcomePage">
     <div class="welcomeShell">
       <div class="welcomeCard">
-        <div class="welcomeLogoRow">
-          <img src="assets/logo.png" alt="Program logo" />
-          <span class="heroBadge">Learning Track</span>
+        <div class="welcomeHero">
+          <div class="welcomeHeroContent">
+            <div class="welcomeLogoRow">
+              <img src="assets/logo.png" alt="Program logo" />
+            </div>
+            <h1>Working at Height</h1>
+            <p class="welcomeSubtitle">Multimodal Training Experience</p>
+            <span class="welcomeAccentLine" aria-hidden="true"></span>
+            <p class="welcomeLead">A step-by-step journey to build your knowledge, demonstrate your skills, and earn your certification.</p>
+          </div>
         </div>
-        <p class="eyebrow">NR-35 Weather and Safety Focus</p>
-        <h1>Working at Height Learning Track</h1>
-        <p class="welcomeLead">Review NR-35 concepts, complete adaptive checks, reflect on your VR experience, and finish with a certificate.</p>
+
         <div class="welcomeHighlights">
-          <div>
-            <strong>Learn</strong>
-            <span>Watch the modules, review the ebook, and ask questions in SmartChats.</span>
+          <div class="welcomeFeature">
+            <div>
+              <strong>Learn</strong>
+              <span>Watch the modules, review the ebook, and ask questions in SmartChats.</span>
+            </div>
+            <span class="featureArrow" aria-hidden="true">→</span>
           </div>
-          <div>
-            <strong>Demonstrate</strong>
-            <span>Complete an adaptive interview and quiz.</span>
+          <div class="welcomeFeature">
+            <div>
+              <strong>Demonstrate</strong>
+              <span>Complete an adaptive interview and quiz that adapts to your knowledge.</span>
+            </div>
+            <span class="featureArrow" aria-hidden="true">→</span>
           </div>
-          <div>
-            <strong>Reflect</strong>
-            <span>Connect the VR activity to a guided debriefing.</span>
+          <div class="welcomeFeature">
+            <div>
+              <strong>Reflect</strong>
+              <span>Upload your VR experience and receive AI-powered debriefing and feedback.</span>
+            </div>
+            <span class="featureArrow" aria-hidden="true">→</span>
           </div>
         </div>
-        <p class="welcomeNote">Each step builds your completion record and prepares your final certificate.</p>
-        <button id="beginTrack" class="primary largeButton">Enter Learning Track</button>
+
+        <div class="welcomeBenefits" aria-label="Training experience benefits">
+          <div>
+            <span class="benefitIcon">✓</span>
+            <strong>Structured Journey</strong>
+            <span>Guided steps that keep you on track.</span>
+          </div>
+          <div>
+            <span class="benefitIcon">•</span>
+            <strong>Track Progress</strong>
+            <span>See your progress and stay motivated.</span>
+          </div>
+          <div>
+            <span class="benefitIcon">★</span>
+            <strong>Earn Certificate</strong>
+            <span>Complete all steps to earn your certificate.</span>
+          </div>
+          <div>
+            <span class="benefitIcon">↻</span>
+            <strong>Your Data is Safe</strong>
+            <span>Your progress is saved automatically.</span>
+          </div>
+        </div>
+
+        <div class="welcomeActions">
+          <button id="beginTrack" class="primary largeButton">Begin Training Experience <span aria-hidden="true">→</span></button>
+          <p class="welcomeNote">Your progress is saved automatically as you go.</p>
+        </div>
       </div>
     </div>
   </section>
@@ -42,12 +82,11 @@
       <div class="brandLockup">
         <img src="assets/logo.png" alt="Program logo" />
         <div>
-          <p class="eyebrow">NR-35 Weather and Safety Focus</p>
-          <h1>Working at Height Learning Track</h1>
-          <p class="heroCopy">SmartChats, interview, quiz, VR reflection, and certification.</p>
+          <p class="eyebrow topbarBadge">NR-35</p>
+          <h1>Working at Height</h1>
+          <p class="heroSubtitle">Multimodal Training Experience</p>
         </div>
       </div>
-      <div class="heroBadge">Learning Track</div>
     </header>
 
     <main class="layout">
@@ -66,12 +105,66 @@
         </div>
 
         <div class="statusList">
-          <p><strong>SmartChats</strong><span id="statusSmart">Not completed</span></p>
-          <p><strong>Interview</strong><span id="statusInterview">Not completed</span></p>
-          <p><strong>Quiz</strong><span id="statusQuiz">Not completed</span></p>
-          <p><strong>VR</strong><span id="statusVR">Not completed</span></p>
-          <p><strong>Debriefing</strong><span id="statusDebriefing">Not completed</span></p>
-          <p><strong>Certificate</strong><span id="statusCertificate">Not downloaded</span></p>
+          <div class="progressStep" data-progress-step="1">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>Orientation</strong>
+              <small>Learner setup</small>
+            </div>
+            <span class="statusChip">Current</span>
+          </div>
+          <div class="progressStep" data-progress-step="2">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>SmartChats</strong>
+              <small>Learning modules</small>
+              <small class="progressLevel hidden" data-level-for="2">Level: <em></em></small>
+            </div>
+            <span id="statusSmart" class="statusChip">Locked</span>
+          </div>
+          <div class="progressStep" data-progress-step="3">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>Interview</strong>
+              <small>Readiness conversation</small>
+              <small class="progressLevel hidden" data-level-for="3">Level: <em></em></small>
+            </div>
+            <span id="statusInterview" class="statusChip">Locked</span>
+          </div>
+          <div class="progressStep" data-progress-step="4">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>Quiz</strong>
+              <small>Readiness check</small>
+              <small class="progressLevel hidden" data-level-for="4">Level: <em></em></small>
+            </div>
+            <span id="statusQuiz" class="statusChip">Locked</span>
+          </div>
+          <div class="progressStep" data-progress-step="5">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>VR Experience</strong>
+              <small>Report analysis</small>
+              <small class="progressLevel hidden" data-level-for="5">Level: <em></em></small>
+            </div>
+            <span id="statusVR" class="statusChip">Locked</span>
+          </div>
+          <div class="progressStep" data-progress-step="6">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>Debriefing</strong>
+              <small>Guided reflection</small>
+            </div>
+            <span id="statusDebriefing" class="statusChip">Locked</span>
+          </div>
+          <div class="progressStep" data-progress-step="7">
+            <span class="progressDot" aria-hidden="true"></span>
+            <div class="progressStepText">
+              <strong>Certificate</strong>
+              <small>Completion record</small>
+            </div>
+            <span id="statusCertificate" class="statusChip">Locked</span>
+          </div>
         </div>
 
         <div class="progressPill">
@@ -81,7 +174,7 @@
       </aside>
 
       <section class="content">
-        <nav class="tabs" aria-label="Learning track steps">
+        <nav class="tabs" aria-label="Training experience steps">
           <button data-tab="1" class="active"><span>1</span> Orientation</button>
           <button data-tab="2" disabled><span>2</span> SmartChats</button>
           <button data-tab="3" disabled><span>3</span> Interview</button>
@@ -364,7 +457,7 @@
           <div class="certificateHero">
             <span class="successMark certificateHeroMark" aria-hidden="true">✓</span>
             <div>
-              <p class="successLabel">Learning track complete</p>
+              <p class="successLabel">Training experience complete</p>
               <h3>Certificate Ready</h3>
               <p>Your completion record is ready to download.</p>
             </div>
@@ -372,12 +465,12 @@
           <div class="certificateFrame" aria-label="Certificate preview">
             <div class="certificateInner">
               <p class="certSmall">Certificate of Completion</p>
-              <h3>Working at Height Learning Track</h3>
+              <h3>Working at Height Training Experience</h3>
               <p class="certSub">NR-35 Weather and Safety Focus</p>
               <div class="certDivider"></div>
               <p class="certStatement">This certifies that</p>
               <p id="certStudentName" class="certName">Learner Name</p>
-              <p class="certStatement">has completed the required learning track activities: SmartChats, adaptive interview, adaptive quiz, VR experience review, and guided debriefing.</p>
+              <p class="certStatement">has completed the required training experience activities: SmartChats, adaptive interview, adaptive quiz, VR experience review, and guided debriefing.</p>
               <div class="certDetails">
                 <p><strong>Email</strong><span id="certEmail">Not available</span></p>
                 <p><strong>Completion Date</strong><span id="certDate">Not available</span></p>
@@ -395,7 +488,7 @@
               <div class="certFooter">
                 <div><span></span><p>Program Facilitator</p></div>
                 <div class="certificateSeal">✓</div>
-                <div><span></span><p>Learning Track Record</p></div>
+                <div><span></span><p>Training Experience Record</p></div>
               </div>
             </div>
           </div>

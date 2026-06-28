@@ -435,7 +435,7 @@ function debriefPersonaOpening() {
     return `Hello ${state.studentName}. I am ${instructor.name}. Well now, we are going to slow down and talk through what you experienced in VR. Reflection matters, honey, because that is where safe habits start to settle in.`;
   }
   if (instructor.id === 'emily') {
-    return `Hello ${state.studentName}. I am ${instructor.name}. We will reflect on the VR activity together and connect it back to the full learning track. I am interested in what felt useful, what felt unclear, and what would help future learners.`;
+    return `Hello ${state.studentName}. I am ${instructor.name}. We will reflect on the VR activity together and connect it back to the full multimodal learning experience. I am interested in what felt useful, what felt unclear, and what would help future learners.`;
   }
   return `Hello ${state.studentName}. I am ${instructor.name}. Good work getting to the debriefing stage. Let us treat this like a field reflection and talk about what the VR activity helped you notice, practice, and question.`;
 }
@@ -828,9 +828,9 @@ function calculateOverallReadiness() {
 }
 
 function readinessMessage(level) {
-  if (level === 'Expert') return 'Congratulations. You demonstrated an Expert level of readiness and successfully completed the Working at Height Learning Track.';
-  if (level === 'Intermediate') return 'You successfully completed the Working at Height Learning Track with an Intermediate readiness level. Additional review is recommended to strengthen mastery of advanced concepts.';
-  return 'You successfully completed the Working at Height Learning Track with a Basic readiness level. Additional study and practice are recommended before performing complex work-at-height activities independently.';
+  if (level === 'Expert') return 'Congratulations. You demonstrated an Expert level of readiness and successfully completed the Working at Height training experience.';
+  if (level === 'Intermediate') return 'You successfully completed the Working at Height training experience with an Intermediate readiness level. Additional review is recommended to strengthen mastery of advanced concepts.';
+  return 'You successfully completed the Working at Height training experience with a Basic readiness level. Additional study and practice are recommended before performing complex work-at-height activities independently.';
 }
 
 function updateCertificatePreview() {
@@ -1030,7 +1030,7 @@ function checkForSavedSessionAfterEmailEntry() {
   promptedSessionEmails.add(email);
   const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'VR Experience Analysis', 6: 'Debriefing', 7: 'Certificate' };
   const savedName = saved.studentName ? ` for ${saved.studentName}` : '';
-  const shouldContinue = window.confirm(`A previous learning track session was found${savedName}.\n\nContinue from Step ${resumeTab}: ${stepLabels[resumeTab]}?\n\nChoose OK to continue, or Cancel to start over.`);
+  const shouldContinue = window.confirm(`A previous training experience session was found${savedName}.\n\nContinue from Step ${resumeTab}: ${stepLabels[resumeTab]}?\n\nChoose OK to continue, or Cancel to start over.`);
   if (shouldContinue) {
     applySessionToState(saved);
     saveSession();
@@ -1116,17 +1116,51 @@ function resetProgramForRetake() {
   updateCertificatePreview();
   saveSession();
 }
+function progressTrackerState(step, completed, ready) {
+  if (state.currentTab === step) return 'current';
+  if (completed) return 'completed';
+  if (ready) return 'ready';
+  return 'locked';
+}
+
+function setProgressTrackerStep(step, status, detail = '') {
+  const row = document.querySelector(`[data-progress-step="${step}"]`);
+  if (!row) return;
+  row.classList.remove('completed', 'current', 'ready', 'locked');
+  row.classList.add(status);
+  const chip = row.querySelector('.statusChip');
+  if (!chip) return;
+  chip.textContent = status === 'completed' ? 'Completed'
+    : status === 'current' ? 'Current'
+    : status === 'ready' ? 'Ready'
+    : 'Locked';
+  if (detail) chip.title = detail; else chip.removeAttribute('title');
+  const level = row.querySelector('.progressLevel');
+  if (level) {
+    const value = level.querySelector('em');
+    if (status === 'completed' && detail) {
+      if (value) value.textContent = detail;
+      level.classList.remove('hidden');
+    } else {
+      if (value) value.textContent = '';
+      level.classList.add('hidden');
+    }
+  }
+}
+
 function updateStatus() {
   $('statusName').textContent = state.studentName || 'Not started';
   $('statusEmail').textContent = state.studentEmail || 'Not started';
-  $('statusSmart').textContent = state.expertiseAfterSmartChats || 'Not completed';
-  $('statusInterview').textContent = state.expertiseAfterInterview || 'Not completed';
-  $('statusQuiz').textContent = state.expertiseAfterQuiz || 'Not completed';
-  $('statusVR').textContent = state.vrCompleted ? (state.vrExpertiseLevel ? `Completed (${state.vrExpertiseLevel})` : 'Completed') : 'Not completed';
-  $('statusDebriefing').textContent = state.debriefingCompleted ? 'Completed' : 'Not completed';
-  $('statusCertificate').textContent = state.certificateDownloaded ? 'Downloaded' : 'Not downloaded';
   const stepLabels = { 1: 'Orientation', 2: 'SmartChats', 3: 'Interview', 4: 'Quiz', 5: 'VR Experience Analysis', 6: 'Debriefing', 7: 'Certificate' };
   $('statusProgress').textContent = stepLabels[state.currentTab] || `Step ${state.currentTab}`;
+  const orientationDone = Boolean(state.orientationCompleted || state.smartchatsCompleted || state.interviewCompleted || state.quizCompleted || state.vrCompleted || state.debriefingCompleted || state.certificateDownloaded);
+  setProgressTrackerStep(1, progressTrackerState(1, orientationDone, true));
+  setProgressTrackerStep(2, progressTrackerState(2, state.smartchatsCompleted, orientationDone), state.expertiseAfterSmartChats || '');
+  setProgressTrackerStep(3, progressTrackerState(3, state.interviewCompleted, state.smartchatsCompleted), state.expertiseAfterInterview || '');
+  setProgressTrackerStep(4, progressTrackerState(4, state.quizCompleted, state.interviewCompleted), state.expertiseAfterQuiz || '');
+  setProgressTrackerStep(5, progressTrackerState(5, state.vrCompleted, state.quizCompleted), state.vrExpertiseLevel || '');
+  setProgressTrackerStep(6, progressTrackerState(6, state.debriefingCompleted, state.vrCompleted));
+  setProgressTrackerStep(7, progressTrackerState(7, state.certificateDownloaded, state.debriefingCompleted));
 }
 function refreshTab1() {
   state.studentName = $('studentName').value.trim();
@@ -1706,7 +1740,7 @@ async function nextDebriefingMessage(userAnswer) {
       parsed.complete = true;
       parsed.followUpAsked = false;
       if (!parsed.message || parsed.message.includes('?')) {
-        parsed.message = 'Thank you for completing the debriefing. Your reflections help connect the learning modules, the Expert Interviewer, the Final Quiz, and the VR experience. You have completed the Working at Height Learning Track. Your certificate is now ready.';
+        parsed.message = 'Thank you for completing the debriefing. Your reflections help connect the learning modules, the Expert Interviewer, the Final Quiz, and the VR experience. You have completed the Working at Height training experience. Your certificate is now ready.';
       }
     }
     if (!isFinalTurn && parsed.followUpAsked) state.debriefing.followUpAsked = true;
@@ -1715,10 +1749,10 @@ async function nextDebriefingMessage(userAnswer) {
   } catch (e) {
     if (isFinalTurn) {
       return {
-        message: 'Thank you for completing the debriefing. Your reflections help connect the learning modules, the Expert Interviewer, the Final Quiz, and the VR experience. You have completed the Working at Height Learning Track. Your certificate is now ready.',
+        message: 'Thank you for completing the debriefing. Your reflections help connect the learning modules, the Expert Interviewer, the Final Quiz, and the VR experience. You have completed the Working at Height training experience. Your certificate is now ready.',
         followUpAsked: state.debriefing.followUpAsked,
         complete: true,
-        summary: 'The learner completed a reflective debriefing about the learning track and VR experience.'
+        summary: 'The learner completed a reflective debriefing about the multimodal learning experience and VR experience.'
       };
     }
     state.debriefing.followUpAsked = true;
@@ -1736,7 +1770,7 @@ async function startDebriefing() {
   $('debriefBox').classList.remove('hidden');
   voiceState.mode = 'debrief';
   updateDebriefInstructorHeader();
-  const opening = `${debriefPersonaOpening()}\n\nI reviewed your VR experience report.\n\nVR expertise level: ${state.vrExpertiseLevel || 'Not identified'}\n\nSummary: ${state.debriefing.vrSummary}\n\nBefore we finish the learning track, what part of the VR activity felt most realistic, useful, or memorable to you?`;
+  const opening = `${debriefPersonaOpening()}\n\nI reviewed your VR experience report.\n\nVR expertise level: ${state.vrExpertiseLevel || 'Not identified'}\n\nSummary: ${state.debriefing.vrSummary}\n\nBefore we finish the training experience, what part of the VR activity felt most realistic, useful, or memorable to you?`;
   addDebriefMsg('interviewer', opening);
   saveSession();
 }
@@ -1777,7 +1811,7 @@ function finishDebriefing() {
   state.vrCompleted = true;
   state.debriefingCompleted = true;
   if (!state.debriefing.summary) {
-    state.debriefing.summary = 'The learner completed a reflective debriefing about the learning track and VR experience.';
+    state.debriefing.summary = 'The learner completed a reflective debriefing about the multimodal learning experience and VR experience.';
   }
   $('debriefBox').classList.add('hidden');
   $('debriefComplete').classList.remove('hidden');
@@ -1847,7 +1881,7 @@ async function init() {
     const q = chooseQuestion(1, state.interview.currentLevel); state.interview.activeQuestion = q;
     addMsg('interviewer', `${personaOpening()}
 
-Welcome to the Interview stage of the Working at Height Learning Track. I will guide you through questions about work-at-height safety, hazard recognition, weather-related decisions, and practical judgment. If you are unsure, you may select I Don't Know and continue.
+Welcome to the Interview stage of the Working at Height training experience. I will guide you through questions about work-at-height safety, hazard recognition, weather-related decisions, and practical judgment. If you are unsure, you may select I Don't Know and continue.
 
 ${makeSegue(null, q)}`);
     saveSession();
