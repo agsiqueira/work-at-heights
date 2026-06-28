@@ -137,6 +137,10 @@ Because AI capabilities are accessed through the NaviGator service layer, the ap
 - HiPerGator HPC
 
 ---
+## SmartChats login
+- email: johnheights.user@gmail.com
+- pass: hackastone
+---
 
 ## Running the Application
 
