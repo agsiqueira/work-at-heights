@@ -168,7 +168,8 @@ The immersive virtual reality subsystem is distributed independently from this r
 
 The latest VR application package can be downloaded from the following Google Drive folder:
 
-**Download:** :contentReference[oaicite:0]{index=0}
+**Download:** 
+https://drive.google.com/drive/folders/17zMy0JkAAY2SIeM8u1XYScpM7r_Wmt0G?usp=sharing
 
 The current VR application has been tested with:
 
@@ -214,8 +215,3 @@ Contributions, suggestions, and research collaborations are welcome.
 
 Please open an Issue to discuss significant changes before submitting a Pull Request.
 
----
-
-## Citation
-
-If you use this software in academic work, please cite the associated publication once available.
